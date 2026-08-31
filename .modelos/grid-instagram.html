@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grid do Instagram</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0d0f14;--surf:#13161e;--surf2:#1c2030;--surf3:#242840;
+  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.13);--bdr3:rgba(255,255,255,0.22);
+  --txt:#e8eaf0;--muted:#6b7080;--muted2:#3a3f52;
+  --accent:#7c6af7;--accent2:#a78bfa;--abg:rgba(124,106,247,0.12);
+  --green:#34d399;--gbg:rgba(52,211,153,0.11);--gbdr:rgba(52,211,153,0.3);
+  --red:#f87171;--rbg:rgba(248,113,113,0.11);--rbdr:rgba(248,113,113,0.3);
+  --orange:#fb923c;--obg:rgba(251,146,60,0.11);--obdr:rgba(251,146,60,0.3);
+  --blue:#60a5fa;--bbg:rgba(96,165,250,0.11);--bbdr:rgba(96,165,250,0.3);
+  --c1:#f472b6;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);font-size:14px;min-height:100vh;}
+
+/* SWITCHER */
+.switcher{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--bg);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:90;}
+.sw-btn{padding:6px 20px;border-radius:8px;border:1px solid var(--bdr2);background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .18s;}
+.sw-btn:hover{background:var(--surf2);color:var(--txt);}
+.sw-btn.on{background:var(--abg);border-color:var(--accent);color:var(--accent2);}
+.view{display:none;}.view.on{display:block;}
+
+/* ════════════════════════
+   MOBILE
+════════════════════════ */
+.mob-shell{max-width:390px;margin:24px auto 48px;background:var(--surf);border-radius:24px;overflow:hidden;border:1px solid var(--bdr2);box-shadow:0 28px 72px rgba(0,0,0,.65);}
+.mob-sb{height:44px;background:var(--surf);display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:12px;color:var(--muted);}
+.mob-sb .sbt{font-weight:600;font-size:13px;color:var(--txt);}
+
+/* app header mobile */
+.mob-app-hdr{height:52px;background:var(--surf);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 16px;gap:10px;}
+.mob-back{width:32px;height:32px;border-radius:8px;background:var(--surf2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px;}
+.mob-hdr-title{font-size:15px;font-weight:600;letter-spacing:-.3px;flex:1;}
+.mob-hdr-actions{display:flex;gap:7px;}
+.mob-icon-btn{width:32px;height:32px;border-radius:8px;background:var(--surf2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:14px;transition:all .15s;}
+.mob-icon-btn:hover{color:var(--txt);border-color:var(--bdr2);}
+.mob-icon-btn.accent{background:var(--abg);border-color:var(--accent);color:var(--accent2);}
+
+.mob-scroll{overflow-y:auto;max-height:740px;}
+.mob-scroll::-webkit-scrollbar{width:0;}
+
+/* IG profile header mobile */
+.ig-profile-hdr{background:#fff;padding:14px 14px 10px;}
+.ig-profile-top{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.ig-profile-av{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;flex-shrink:0;border:3px solid transparent;outline:3px solid transparent;}
+.ig-profile-av.ring{box-shadow:0 0 0 2px #fff,0 0 0 4px #e1306c;}
+.ig-profile-stats{display:flex;gap:16px;flex:1;justify-content:center;}
+.ig-stat{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.ig-stat-num{font-size:15px;font-weight:700;color:#000;}
+.ig-stat-lbl{font-size:11px;color:#555;}
+.ig-profile-name{font-size:13px;font-weight:700;color:#000;margin-bottom:2px;}
+.ig-profile-bio{font-size:12px;color:#000;line-height:1.4;margin-bottom:8px;}
+.ig-profile-btn{display:block;width:100%;padding:6px;background:#f0f0f0;border:1px solid #ddd;border-radius:7px;font-size:13px;font-weight:600;color:#000;text-align:center;cursor:pointer;}
+
+/* tab bar ig */
+.ig-tabs{background:#fff;display:flex;border-top:1px solid #eee;border-bottom:1px solid #eee;}
+.ig-tab{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;cursor:pointer;border-bottom:2px solid transparent;font-size:18px;color:#aaa;transition:all .15s;}
+.ig-tab.on{border-bottom-color:#000;color:#000;}
+
+/* grid posts */
+.ig-grid{background:#fff;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}
+.ig-grid-cell{aspect-ratio:1;position:relative;cursor:pointer;overflow:hidden;background:#f0f0f0;}
+.ig-grid-cell:hover .cell-overlay{opacity:1;}
+.cell-content{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.cell-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;gap:12px;opacity:0;transition:opacity .2s;}
+.cell-overlay span{color:#fff;font-size:12px;font-weight:600;}
+.cell-status{position:absolute;top:5px;right:5px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;}
+.cell-status.aprovado{background:var(--green);}
+.cell-status.aguardando{background:var(--orange);}
+.cell-status.rascunho{background:var(--muted);}
+.cell-status.publicado{background:var(--blue);}
+.cell-type{position:absolute;top:5px;left:5px;font-size:12px;}
+.cell-planned{position:absolute;inset:0;border:2px dashed rgba(255,255,255,.4);}
+
+/* legend bar */
+.legend-bar{background:var(--surf);padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--bdr);}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);}
+.leg-dot{width:8px;height:8px;border-radius:50%;}
+
+/* bottom action bar */
+.mob-grid-actions{padding:12px 14px 20px;background:var(--surf);border-top:1px solid var(--bdr);display:flex;gap:8px;}
+
+/* ── POST DETAIL (slide-up panel mobile) ── */
+.post-detail-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:50;opacity:0;pointer-events:none;transition:opacity .25s;border-radius:24px;}
+.post-detail-overlay.on{opacity:1;pointer-events:all;}
+.post-detail-sheet{position:absolute;bottom:0;left:0;right:0;background:var(--surf);border-radius:20px 20px 0 0;max-height:90%;overflow-y:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+.post-detail-sheet::-webkit-scrollbar{width:0;}
+.post-detail-overlay.on .post-detail-sheet{transform:translateY(0);}
+.pds-handle{width:36px;height:4px;background:var(--surf3);border-radius:2px;margin:12px auto 8px;}
+.pds-hdr{padding:0 16px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px;}
+.pds-close{width:28px;height:28px;border-radius:7px;background:var(--surf2);border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.pds-title{font-size:14px;font-weight:600;flex:1;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surf);border:1px solid var(--bdr2);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px;opacity:0;transition:all .28s;z-index:300;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.approve{border-color:var(--gbdr);color:var(--green);}
+.toast.link{border-color:var(--bbdr);color:var(--blue);}
+.toast.feedback{border-color:var(--obdr);color:var(--orange);}
+
+/* ════════════════════════
+   DESKTOP
+════════════════════════ */
+.desk-wrap{max-width:1200px;margin:24px auto 48px;padding:0 24px;}
+.desk-shell{background:var(--surf);border-radius:16px;border:1px solid var(--bdr2);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.desk-hdr{height:52px;background:var(--surf);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 16px;gap:12px;}
+.d-logo{font-size:15px;font-weight:600;color:var(--accent2);letter-spacing:-.3px;}
+.d-div{width:1px;height:18px;background:var(--bdr2);}
+.d-bc{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);}
+.d-bc span{color:var(--txt);}
+.d-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.d-ic{width:32px;height:32px;background:var(--surf2);border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;}
+.d-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ec4899);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
+.desk-body{display:flex;min-height:700px;}
+.d-nav{width:52px;background:var(--surf);border-right:1px solid var(--bdr);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;flex-shrink:0;}
+.d-ni{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:17px;transition:background .15s,color .15s;}
+.d-ni:hover{background:var(--surf2);color:var(--txt);}
+.d-ni.on{background:rgba(124,106,247,.15);color:var(--accent2);}
+.d-nbot{margin-top:auto;}
+
+/* DESK MAIN — 3 colunas */
+.desk-main{flex:1;display:grid;grid-template-columns:1fr 320px 340px;overflow:hidden;}
+
+/* COL 1 — phone mockup */
+.phone-col{border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;}
+.phone-col-hdr{padding:18px 20px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.pch-back{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted);cursor:pointer;}
+.pch-back:hover{color:var(--txt);}
+.pch-info{flex:1;}
+.pch-title{font-size:15px;font-weight:600;letter-spacing:-.3px;}
+.pch-sub{font-size:12px;color:var(--muted);}
+.pch-actions{display:flex;gap:7px;}
+.phone-col-body{flex:1;overflow-y:auto;padding:20px;display:flex;justify-content:center;align-items:flex-start;}
+.phone-col-body::-webkit-scrollbar{width:3px;}.phone-col-body::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:3px;}
+
+/* phone frame */
+.d-phone{width:260px;flex-shrink:0;}
+.d-phone-frame{background:#000;border-radius:30px;overflow:hidden;border:2.5px solid rgba(255,255,255,.1);box-shadow:0 14px 44px rgba(0,0,0,.7);}
+.d-ph-notch{height:28px;background:#000;display:flex;align-items:center;justify-content:center;}
+.d-ph-pill{width:76px;height:5px;background:rgba(255,255,255,.12);border-radius:3px;}
+.d-ig-scroll{max-height:560px;overflow-y:auto;}
+.d-ig-scroll::-webkit-scrollbar{width:0;}
+
+/* COL 2 — grid overview + stats */
+.grid-col{border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;}
+.grid-col-hdr{padding:18px 16px 14px;border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.gc-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:3px;}
+.gc-title{font-size:14px;font-weight:600;}
+.grid-col-body{flex:1;overflow-y:auto;padding:16px;}
+.grid-col-body::-webkit-scrollbar{width:3px;}.grid-col-body::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:3px;}
+
+/* mini grid */
+.mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:16px;}
+.mini-cell{aspect-ratio:1;border-radius:4px;position:relative;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:18px;transition:transform .15s;}
+.mini-cell:hover{transform:scale(1.04);}
+.mini-cell.sel{outline:2px solid var(--accent);outline-offset:1px;}
+.mini-cell-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+.mini-status{position:absolute;bottom:2px;right:2px;width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(0,0,0,.3);}
+.mini-status.aprovado{background:var(--green);}
+.mini-status.aguardando{background:var(--orange);}
+.mini-status.rascunho{background:var(--muted);}
+.mini-status.publicado{background:var(--blue);}
+.mini-status.alteracao{background:var(--red);}
+.mini-type{position:absolute;top:2px;left:2px;font-size:9px;}
+
+/* stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;}
+.stat-card{background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:10px;}
+.stat-num{font-size:20px;font-weight:600;letter-spacing:-1px;line-height:1;}
+.stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+.stat-card.pub .stat-num{color:var(--blue);}
+.stat-card.apv .stat-num{color:var(--green);}
+.stat-card.pend .stat-num{color:var(--orange);}
+.stat-card.total .stat-num{color:var(--accent2);}
+
+/* legend */
+.leg-grid{display:flex;flex-direction:column;gap:5px;}
+.leg-row{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);}
+.leg-dot-d{width:9px;height:9px;border-radius:50%;}
+
+/* link section */
+.link-section{background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:12px;}
+.link-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.link-val{font-size:11px;color:var(--accent2);font-family:'DM Mono',monospace;word-break:break-all;margin-bottom:8px;}
+.link-actions{display:flex;gap:6px;}
+
+/* COL 3 — detalhe do post selecionado */
+.detail-col{display:flex;flex-direction:column;overflow:hidden;}
+.detail-col-hdr{padding:18px 16px 14px;border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.dc-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:3px;}
+.dc-title{font-size:14px;font-weight:600;}
+.detail-col-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;}
+.detail-col-body::-webkit-scrollbar{width:3px;}.detail-col-body::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:3px;}
+
+/* post preview card */
+.post-preview-card{background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;}
+.ppc-media{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--surf3);font-size:52px;position:relative;}
+.ppc-info{padding:12px;}
+.ppc-client{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--c1);margin-bottom:4px;}
+.ppc-caption{font-size:12px;line-height:1.5;color:var(--txt);margin-bottom:8px;}
+.ppc-meta{display:flex;align-items:center;gap:6px;}
+
+/* feedback thread col3 */
+.fb-thread{display:flex;flex-direction:column;gap:8px;}
+.fb-item{display:flex;gap:8px;align-items:flex-start;}
+.fb-av{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;}
+.fb-bub{flex:1;background:var(--surf2);border:1px solid var(--bdr);border-radius:0 9px 9px 9px;padding:8px 10px;}
+.fb-bub.mine{background:var(--abg);border-color:rgba(124,106,247,.2);border-radius:9px 0 9px 9px;}
+.fb-item.right{flex-direction:row-reverse;}
+.fb-bub-auth{font-size:10px;color:var(--muted);margin-bottom:3px;}
+.fb-bub.mine .fb-bub-auth{color:var(--accent2);}
+.fb-bub-txt{font-size:11px;line-height:1.5;color:var(--txt);}
+
+/* action section col3 */
+.action-sec{display:flex;flex-direction:column;gap:7px;}
+.action-sec-ttl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+
+/* empty state col3 */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:40px 20px;text-align:center;color:var(--muted);height:100%;}
+.empty-icon{font-size:36px;opacity:.3;}
+.empty-txt{font-size:13px;line-height:1.5;}
+
+/* SHARED */
+.sbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:500;}
+.sbadge.aprovado{background:var(--gbg);color:var(--green);border:1px solid var(--gbdr);}
+.sbadge.aguardando{background:var(--obg);color:var(--orange);border:1px solid var(--obdr);}
+.sbadge.alteracao{background:var(--rbg);color:var(--red);border:1px solid var(--rbdr);}
+.sbadge.rascunho{background:var(--surf2);color:var(--muted);border:1px solid var(--bdr2);}
+.sbadge.publicado{background:var(--bbg);color:var(--blue);border:1px solid var(--bbdr);}
+
+.btn{padding:9px 14px;border-radius:9px;border:none;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;justify-content:center;transition:all .15s;}
+.btn-ghost{background:var(--surf2);border:1px solid var(--bdr2);color:var(--txt);}
+.btn-ghost:hover{background:var(--surf3);}
+.btn-pri{background:var(--accent);color:#fff;}
+.btn-pri:hover{opacity:.85;}
+.btn-approve{background:var(--green);color:#fff;}
+.btn-approve:hover{opacity:.85;}
+.btn-fb{background:var(--surf2);border:1.5px solid var(--obdr);color:var(--orange);}
+.btn-fb:hover{background:var(--obg);}
+.btn-link{background:var(--surf2);border:1.5px solid var(--bbdr);color:var(--blue);}
+.btn-link:hover{background:var(--bbg);}
+.btn-full{width:100%;}
+.btn-sm{padding:6px 12px;font-size:11px;}
+
+.inp{width:100%;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:8px;padding:8px 11px;color:var(--txt);font-family:inherit;font-size:12px;outline:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--accent);}
+.inp::placeholder{color:var(--muted2);}
+textarea.inp{resize:none;min-height:72px;line-height:1.5;}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;}
+.modal-ov.on{opacity:1;pointer-events:all;}
+.modal-box{background:var(--surf);border:1px solid var(--bdr2);border-radius:16px;width:460px;max-width:92vw;overflow:hidden;transform:scale(.95) translateY(8px);transition:transform .25s cubic-bezier(.4,0,.2,1);}
+.modal-ov.on .modal-box{transform:scale(1) translateY(0);}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 14px;border-bottom:1px solid var(--bdr);}
+.modal-ttl{font-size:15px;font-weight:600;letter-spacing:-.3px;}
+.modal-cls{width:28px;height:28px;border-radius:7px;background:var(--surf2);border:1px solid var(--bdr);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;}
+.modal-cls:hover{color:var(--txt);}
+.modal-body{padding:18px;}
+.modal-footer{padding:0 18px 18px;display:flex;gap:7px;justify-content:flex-end;}
+
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.flbl{font-size:12px;font-weight:500;}
+.fhint{font-size:11px;color:var(--muted);line-height:1.4;}
+
+.sec-ttl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding-bottom:7px;border-bottom:1px solid var(--bdr);margin-bottom:10px;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeUp .2s ease;}
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <button class="sw-btn on" id="sw-mob">📱 Mobile</button>
+  <button class="sw-btn" id="sw-dsk">🖥️ Desktop</button>
+</div>
+
+<!-- ══════════════════════════════
+     MOBILE
+══════════════════════════════ -->
+<div class="view on" id="view-mob">
+  <div class="mob-shell" style="position:relative;">
+    <div class="mob-sb"><span class="sbt">19:42</span><span>●●● 5G 🔋</span></div>
+
+    <div class="mob-app-hdr">
+      <div class="mob-back">←</div>
+      <div class="mob-hdr-title">Grid — Loja Aurora</div>
+      <div class="mob-hdr-actions">
+        <div class="mob-icon-btn accent" id="mob-link-btn" title="Gerar link">🔗</div>
+        <div class="mob-icon-btn" title="Filtrar">⚙️</div>
+      </div>
+    </div>
+
+    <div class="mob-scroll">
+
+      <!-- IG profile header -->
+      <div class="ig-profile-hdr">
+        <div class="ig-profile-top">
+          <div class="ig-profile-av ring">L</div>
+          <div class="ig-profile-stats">
+            <div class="ig-stat"><span class="ig-stat-num">12</span><span class="ig-stat-lbl">posts</span></div>
+            <div class="ig-stat"><span class="ig-stat-num">4,2k</span><span class="ig-stat-lbl">seguidores</span></div>
+            <div class="ig-stat"><span class="ig-stat-num">318</span><span class="ig-stat-lbl">seguindo</span></div>
+          </div>
+        </div>
+        <div class="ig-profile-name">Loja Aurora ✨</div>
+        <div class="ig-profile-bio">Moda feminina 🛍️ Nova coleção de verão disponível!<br>👇 Compre agora pelo link</div>
+        <div class="ig-profile-btn">Seguir</div>
+      </div>
+
+      <!-- tab bar -->
+      <div class="ig-tabs">
+        <div class="ig-tab on">⊞</div>
+        <div class="ig-tab">🏷️</div>
+      </div>
+
+      <!-- grid -->
+      <div class="ig-grid" id="mob-ig-grid"></div>
+
+      <!-- legend -->
+      <div class="legend-bar">
+        <div class="leg-item"><div class="leg-dot" style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div>Publicado</div>
+        <div class="leg-item"><div class="leg-dot" style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>Aprovado</div>
+        <div class="leg-item"><div class="leg-dot" style="width:8px;height:8px;border-radius:50%;background:var(--orange)"></div>Aguardando</div>
+        <div class="leg-item"><div class="leg-dot" style="width:8px;height:8px;border-radius:50%;background:var(--muted)"></div>Rascunho</div>
+      </div>
+
+      <!-- action bar -->
+      <div class="mob-grid-actions">
+        <button class="btn btn-link btn-full" id="mob-link-bar-btn">🔗 Gerar link para cliente</button>
+        <button class="btn btn-ghost btn-sm" style="flex-shrink:0;">📊</button>
+      </div>
+
+    </div>
+
+    <!-- POST DETAIL SHEET -->
+    <div class="post-detail-overlay" id="mob-detail-overlay">
+      <div class="post-detail-sheet" id="mob-detail-sheet">
+        <div class="pds-handle"></div>
+        <div class="pds-hdr">
+          <button class="pds-close" id="mob-detail-close">×</button>
+          <div class="pds-title" id="mob-detail-title">Post</div>
+          <div id="mob-detail-badge"></div>
+        </div>
+        <div style="padding:0 14px 16px;" id="mob-detail-body"></div>
+      </div>
+    </div>
+
+  </div><!-- /mob-shell -->
+
+  <!-- MODAL link mobile -->
+  <div class="modal-ov" id="mob-link-modal">
+    <div class="modal-box fade-in">
+      <div class="modal-hdr">
+        <div class="modal-ttl">🔗 Gerar link para cliente</div>
+        <div class="modal-cls" id="mob-link-cls">×</div>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label class="flbl">Cliente</label>
+          <div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;font-size:13px;display:flex;align-items:center;gap:8px;">
+            <span style="width:22px;height:22px;border-radius:50%;background:#f472b6;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">L</span>
+            Loja Aurora
+          </div>
+        </div>
+        <div class="field">
+          <label class="flbl">Mês de referência</label>
+          <select class="inp"><option>Março 2026</option><option>Abril 2026</option></select>
+        </div>
+        <div class="field">
+          <label class="flbl">Validade do link</label>
+          <select class="inp"><option>7 dias</option><option>15 dias</option><option>30 dias</option><option>Sem expiração</option></select>
+        </div>
+        <div class="field">
+          <label class="flbl">PIN de acesso (opcional)</label>
+          <input type="text" class="inp" placeholder="Ex: 1234" maxlength="6">
+          <span class="fhint">O cliente precisará digitar esse PIN para abrir o link.</span>
+        </div>
+        <div style="background:var(--surf2);border:1px dashed var(--bbdr);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Link gerado</div>
+          <div style="font-size:11px;color:var(--blue);font-family:'DM Mono',monospace;" id="mob-link-val">postflow.app/review/aurora-mar26-x7k2</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="mob-link-cancel">Fechar</button>
+        <button class="btn btn-link" id="mob-link-copy">📋 Copiar link</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="mob-toast"></div>
+</div>
+
+
+<!-- ══════════════════════════════
+     DESKTOP
+══════════════════════════════ -->
+<div class="view" id="view-dsk">
+  <div class="desk-wrap">
+    <div class="desk-shell">
+
+      <div class="desk-hdr">
+        <span class="d-logo">postflow</span>
+        <div class="d-div"></div>
+        <div class="d-bc">
+          Clientes <span style="opacity:.4">›</span>
+          Loja Aurora <span style="opacity:.4">›</span>
+          <span>Grid do Instagram</span>
+        </div>
+        <div class="d-right">
+          <div class="d-ic">🔔</div>
+          <div class="d-av">A</div>
+        </div>
+      </div>
+
+      <div class="desk-body">
+        <nav class="d-nav">
+          <div class="d-ni">🏠</div>
+          <div class="d-ni on">📅</div>
+          <div class="d-ni">👥</div>
+          <div class="d-ni">💬</div>
+          <div class="d-nbot"><div class="d-ni">⚙️</div></div>
+        </nav>
+
+        <div class="desk-main">
+
+          <!-- COL 1 — phone -->
+          <div class="phone-col">
+            <div class="phone-col-hdr">
+              <div class="pch-back">← Clientes</div>
+              <div class="pch-info">
+                <div class="pch-title">Loja Aurora</div>
+                <div class="pch-sub">Grid de março 2026 · 12 posts</div>
+              </div>
+              <div class="pch-actions">
+                <button class="btn btn-link btn-sm" id="desk-link-btn">🔗 Gerar link</button>
+              </div>
+            </div>
+            <div class="phone-col-body">
+              <div class="d-phone">
+                <div class="d-phone-frame">
+                  <div class="d-ph-notch"><div class="d-ph-pill"></div></div>
+                  <div class="d-ig-scroll">
+                    <!-- ig profile -->
+                    <div class="ig-profile-hdr" style="padding:10px 10px 8px;">
+                      <div class="ig-profile-top" style="margin-bottom:8px;">
+                        <div class="ig-profile-av ring" style="width:50px;height:50px;font-size:16px;">L</div>
+                        <div class="ig-profile-stats" style="gap:10px;">
+                          <div class="ig-stat"><span class="ig-stat-num" style="font-size:13px;">12</span><span class="ig-stat-lbl" style="font-size:10px;">posts</span></div>
+                          <div class="ig-stat"><span class="ig-stat-num" style="font-size:13px;">4,2k</span><span class="ig-stat-lbl" style="font-size:10px;">seg.</span></div>
+                          <div class="ig-stat"><span class="ig-stat-num" style="font-size:13px;">318</span><span class="ig-stat-lbl" style="font-size:10px;">seg.</span></div>
+                        </div>
+                      </div>
+                      <div class="ig-profile-name" style="font-size:11px;">Loja Aurora ✨</div>
+                      <div class="ig-profile-bio" style="font-size:10px;margin-bottom:6px;">Moda feminina 🛍️ Nova coleção disponível!</div>
+                      <div class="ig-profile-btn" style="font-size:11px;padding:5px;">Seguir</div>
+                    </div>
+                    <!-- tabs -->
+                    <div class="ig-tabs" style="border:none;">
+                      <div class="ig-tab on" style="padding:8px;font-size:16px;">⊞</div>
+                      <div class="ig-tab" style="padding:8px;font-size:16px;">🏷️</div>
+                    </div>
+                    <!-- grid -->
+                    <div class="ig-grid" id="desk-ig-grid" style="gap:1px;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COL 2 — overview + stats -->
+          <div class="grid-col">
+            <div class="grid-col-hdr">
+              <div class="gc-lbl">Visão geral</div>
+              <div class="gc-title">Março 2026</div>
+            </div>
+            <div class="grid-col-body">
+
+              <div class="sec-ttl">Mapa do grid</div>
+              <div class="mini-grid" id="desk-mini-grid"></div>
+
+              <div class="sec-ttl">Resumo do mês</div>
+              <div class="stats-grid" style="margin-bottom:16px;">
+                <div class="stat-card total"><div class="stat-num">12</div><div class="stat-lbl">Total</div></div>
+                <div class="stat-card pub"><div class="stat-num">5</div><div class="stat-lbl">Publicados</div></div>
+                <div class="stat-card apv"><div class="stat-num">3</div><div class="stat-lbl">Aprovados</div></div>
+                <div class="stat-card pend"><div class="stat-num">4</div><div class="stat-lbl">Pendentes</div></div>
+              </div>
+
+              <div class="sec-ttl">Legenda</div>
+              <div class="leg-grid" style="margin-bottom:16px;">
+                <div class="leg-row"><div class="leg-dot-d" style="background:var(--blue);"></div>Publicado no Instagram</div>
+                <div class="leg-row"><div class="leg-dot-d" style="background:var(--green);"></div>Aprovado pelo cliente</div>
+                <div class="leg-row"><div class="leg-dot-d" style="background:var(--orange);"></div>Aguardando aprovação</div>
+                <div class="leg-row"><div class="leg-dot-d" style="background:var(--red);"></div>Em alteração</div>
+                <div class="leg-row"><div class="leg-dot-d" style="background:var(--muted);"></div>Rascunho</div>
+              </div>
+
+              <div class="sec-ttl">Link do cliente</div>
+              <div class="link-section">
+                <div class="link-lbl">Link ativo para aprovação</div>
+                <div class="link-val" id="desk-link-val">postflow.app/review/aurora-mar26-x7k2</div>
+                <div class="link-actions">
+                  <button class="btn btn-link btn-sm btn-full" id="desk-copy-link">📋 Copiar</button>
+                  <button class="btn btn-ghost btn-sm btn-full" id="desk-new-link">🔄 Novo</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- COL 3 — detalhe do post selecionado -->
+          <div class="detail-col">
+            <div class="detail-col-hdr">
+              <div class="dc-lbl">Post selecionado</div>
+              <div class="dc-title" id="desk-detail-title">Clique em um post</div>
+            </div>
+            <div class="detail-col-body" id="desk-detail-body">
+              <div class="empty-state">
+                <div class="empty-icon">👆</div>
+                <div class="empty-txt">Clique em qualquer post<br>no grid ou no mapa para<br>ver os detalhes aqui.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL link desktop -->
+  <div class="modal-ov" id="desk-link-modal">
+    <div class="modal-box fade-in">
+      <div class="modal-hdr">
+        <div class="modal-ttl">🔗 Gerar link para cliente</div>
+        <div class="modal-cls" id="desk-link-cls">×</div>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label class="flbl">Mês de referência</label>
+          <select class="inp"><option>Março 2026</option><option>Abril 2026</option></select>
+        </div>
+        <div class="field">
+          <label class="flbl">Validade do link</label>
+          <select class="inp"><option>7 dias</option><option>15 dias</option><option>30 dias</option><option>Sem expiração</option></select>
+        </div>
+        <div class="field">
+          <label class="flbl">PIN de acesso (opcional)</label>
+          <input type="text" class="inp" placeholder="Ex: 1234" maxlength="6">
+          <span class="fhint">O cliente precisará digitar esse PIN ao abrir o link.</span>
+        </div>
+        <div style="background:var(--surf2);border:1px dashed var(--bbdr);border-radius:8px;padding:12px 14px;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Link gerado</div>
+          <div style="font-size:12px;color:var(--blue);font-family:'DM Mono',monospace;">postflow.app/review/aurora-mar26-x7k2</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="desk-link-cancel">Cancelar</button>
+        <button class="btn btn-link" id="desk-link-copy-modal">📋 Copiar e fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL feedback desktop -->
+  <div class="modal-ov" id="desk-fb-modal">
+    <div class="modal-box fade-in">
+      <div class="modal-hdr">
+        <div class="modal-ttl">💬 Solicitar alteração</div>
+        <div class="modal-cls" id="desk-fb-cls">×</div>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label class="flbl">O que precisa ser alterado? <span style="color:var(--red)">*</span></label>
+          <textarea class="inp" id="desk-fb-text" rows="4" placeholder="Descreva a alteração com detalhes..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="desk-fb-cancel">Cancelar</button>
+        <button class="btn btn-fb" id="desk-fb-send">Enviar alteração</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="desk-toast"></div>
+</div>
+
+
+<script>
+(function() {
+
+// ── POSTS DATA ──
+var POSTS = [
+  {id:1,  icon:'🎬', type:'Reels',    day:1,  st:'publicado',  cap:'Nova coleção de verão chegou! ✨ Confira os looks incríveis para você brilhar nessa temporada. #moda #verao'},
+  {id:2,  icon:'🖼️', type:'Carrossel',day:3,  st:'publicado',  cap:'5 looks para usar na praia 🌊 Qual é o seu favorito? Salva esse post para inspiração!'},
+  {id:3,  icon:'📷', type:'Foto',     day:5,  st:'publicado',  cap:'Look do dia ✨ Camisa floral + calça branca = perfeição total. Tudo disponível no site!'},
+  {id:4,  icon:'⭕', type:'Stories',  day:7,  st:'publicado',  cap:'Promoção relâmpago! 30% off em toda a coleção verão até meia-noite 🔥'},
+  {id:5,  icon:'🖼️', type:'Carrossel',day:10, st:'publicado',  cap:'Tendências outono/inverno que você precisa conhecer agora 🍂 #tendencias #moda'},
+  {id:6,  icon:'🎬', type:'Reels',    day:13, st:'aprovado',   cap:'Tutorial: 3 formas de usar o mesmo vestido! Versatilidade que você ama 💛'},
+  {id:7,  icon:'📷', type:'Foto',     day:15, st:'aprovado',   cap:'Chegou! Blazer oversized em 5 cores novas. Link na bio 🛒'},
+  {id:8,  icon:'⭕', type:'Stories',  day:17, st:'aprovado',   cap:'Bastidores da sessão de fotos! Vem ver como foi o processo criativo da nova campanha.'},
+  {id:9,  icon:'🎬', type:'Reels',    day:19, st:'aguardando', cap:'Combinando peças básicas para criar looks incríveis! Save esse reel! ⭐'},
+  {id:10, icon:'🖼️', type:'Carrossel',day:22, st:'aguardando', cap:'Guia completo de acessórios para o verão ☀️ Bolsas, chapéus, óculos e mais!'},
+  {id:11, icon:'📷', type:'Foto',     day:25, st:'aguardando', cap:'Nova vitrine da semana 🪟 Venha nos visitar! Estamos na Rua das Flores, 128.'},
+  {id:12, icon:'🎬', type:'Reels',    day:28, st:'rascunho',   cap:'Novidades chegando... 👀 Fica de olho nas stories para saber primeiro!'},
+];
+
+var STATUS_COLORS = {
+  publicado:'#60a5fa', aprovado:'#34d399', aguardando:'#fb923c', alteracao:'#f87171', rascunho:'#6b7080'
+};
+var STATUS_LABELS = {
+  publicado:'Publicado', aprovado:'Aprovado', aguardando:'Aguardando', alteracao:'Em alteração', rascunho:'Rascunho'
+};
+var STATUS_CLASS = {
+  publicado:'publicado', aprovado:'aprovado', aguardando:'aguardando', alteracao:'alteracao', rascunho:'rascunho'
+};
+var TYPE_EMOJIS = {Reels:'🎬',Carrossel:'🖼️',Foto:'📷',Stories:'⭕',Design:'🎨'};
+
+var selectedPost = null;
+
+// ── UTILS ──
+function showToast(id, msg, type) {
+  var t = document.getElementById(id);
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' on';
+  setTimeout(function(){ t.classList.remove('on'); }, 3200);
+}
+
+function statusBadge(st) {
+  return '<span class="sbadge ' + STATUS_CLASS[st] + '">' + STATUS_LABELS[st] + '</span>';
+}
+
+// ── SWITCHER ──
+document.getElementById('sw-mob').addEventListener('click', function() {
+  document.getElementById('view-mob').classList.add('on');
+  document.getElementById('view-dsk').classList.remove('on');
+  document.getElementById('sw-mob').classList.add('on');
+  document.getElementById('sw-dsk').classList.remove('on');
+});
+document.getElementById('sw-dsk').addEventListener('click', function() {
+  document.getElementById('view-dsk').classList.add('on');
+  document.getElementById('view-mob').classList.remove('on');
+  document.getElementById('sw-dsk').classList.add('on');
+  document.getElementById('sw-mob').classList.remove('on');
+});
+
+// ─────────────────────────
+// RENDER GRIDS
+// ─────────────────────────
+function cellBg(st) {
+  var map = {
+    publicado:'rgba(96,165,250,0.15)',
+    aprovado:'rgba(52,211,153,0.13)',
+    aguardando:'rgba(251,146,60,0.13)',
+    alteracao:'rgba(248,113,113,0.13)',
+    rascunho:'rgba(107,112,128,0.1)'
+  };
+  return map[st] || 'var(--surf3)';
+}
+
+function renderMobGrid() {
+  var grid = document.getElementById('mob-ig-grid');
+  var html = '';
+  POSTS.forEach(function(p) {
+    html += '<div class="ig-grid-cell" data-pid="' + p.id + '" style="background:' + cellBg(p.st) + ';">';
+    html += '<div class="cell-content">' + p.icon + '</div>';
+    if (p.st !== 'publicado') html += '<div class="cell-planned"></div>';
+    html += '<div class="cell-type">' + p.icon + '</div>';
+    html += '<div class="cell-status ' + p.st + '"></div>';
+    html += '<div class="cell-overlay"><span>Ver post</span></div>';
+    html += '</div>';
+  });
+  grid.innerHTML = html;
+  grid.querySelectorAll('.ig-grid-cell').forEach(function(cell) {
+    cell.addEventListener('click', function() {
+      var pid = parseInt(cell.dataset.pid);
+      openMobDetail(pid);
+    });
+  });
+}
+
+function renderDeskGrid() {
+  var grid = document.getElementById('desk-ig-grid');
+  var html = '';
+  POSTS.forEach(function(p) {
+    html += '<div class="ig-grid-cell" data-pid="' + p.id + '" style="background:' + cellBg(p.st) + ';cursor:pointer;">';
+    html += '<div class="cell-content" style="font-size:22px;">' + p.icon + '</div>';
+    if (p.st !== 'publicado') html += '<div class="cell-planned"></div>';
+    html += '<div class="cell-status ' + p.st + '" style="width:10px;height:10px;"></div>';
+    html += '</div>';
+  });
+  grid.innerHTML = html;
+  grid.querySelectorAll('.ig-grid-cell').forEach(function(cell) {
+    cell.addEventListener('click', function() {
+      var pid = parseInt(cell.dataset.pid);
+      selectDeskPost(pid);
+    });
+  });
+}
+
+function renderMiniGrid() {
+  var grid = document.getElementById('desk-mini-grid');
+  var html = '';
+  POSTS.forEach(function(p) {
+    var selCls = selectedPost === p.id ? ' sel' : '';
+    html += '<div class="mini-cell' + selCls + '" data-pid="' + p.id + '" style="background:' + cellBg(p.st) + ';">';
+    html += '<div class="mini-cell-bg">' + p.icon + '</div>';
+    html += '<div class="mini-status ' + p.st + '"></div>';
+    html += '</div>';
+  });
+  grid.innerHTML = html;
+  grid.querySelectorAll('.mini-cell').forEach(function(cell) {
+    cell.addEventListener('click', function() {
+      selectDeskPost(parseInt(cell.dataset.pid));
+    });
+  });
+}
+
+// ─────────────────────────
+// MOBILE — post detail sheet
+// ─────────────────────────
+function openMobDetail(pid) {
+  var p = POSTS.find(function(x){ return x.id === pid; });
+  if (!p) return;
+
+  document.getElementById('mob-detail-title').textContent = p.type + ' · ' + p.day + '/03';
+  document.getElementById('mob-detail-badge').innerHTML = statusBadge(p.st);
+
+  var body = document.getElementById('mob-detail-body');
+  body.innerHTML = '<div style="margin:12px 0 10px;">'
+    + '<div style="width:100%;aspect-ratio:1;background:' + cellBg(p.st) + ';border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:52px;">' + p.icon + '</div>'
+    + '</div>'
+    + '<div style="font-size:12px;line-height:1.6;color:var(--txt);margin-bottom:12px;padding:10px;background:var(--surf2);border-radius:8px;border:1px solid var(--bdr);">'
+    + '<strong style="font-size:11px;color:var(--muted);">@lojaaurora</strong> ' + p.cap
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">'
+    + '<div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:9px 10px;"><div style="font-size:10px;color:var(--muted);">Tipo</div><div style="font-size:12px;font-weight:500;">' + p.icon + ' ' + p.type + '</div></div>'
+    + '<div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:9px 10px;"><div style="font-size:10px;color:var(--muted);">Data</div><div style="font-size:12px;font-weight:500;font-family:\'DM Mono\',monospace;">' + p.day + '/03 · 18:00</div></div>'
+    + '</div>'
+    + '<div style="display:flex;flex-direction:column;gap:7px;">'
+    + (p.st !== 'publicado' && p.st !== 'aprovado'
+      ? '<button class="btn btn-approve btn-full" data-approve="' + p.id + '">✓ Aprovar post</button>'
+        + '<button class="btn btn-fb btn-full" data-feedback="' + p.id + '">💬 Solicitar alteração</button>'
+      : p.st === 'aprovado'
+        ? '<div style="text-align:center;padding:10px;font-size:13px;color:var(--green);">✓ Post aprovado pelo cliente</div>'
+        : '<div style="text-align:center;padding:10px;font-size:13px;color:var(--blue);">📸 Já publicado no Instagram</div>')
+    + '<button class="btn btn-ghost btn-full btn-sm">✏️ Editar post</button>'
+    + '</div>';
+
+  // bind approve / feedback buttons
+  var apvBtn = body.querySelector('[data-approve]');
+  if (apvBtn) {
+    apvBtn.addEventListener('click', function() {
+      var idx = POSTS.findIndex(function(x){ return x.id === pid; });
+      if (idx >= 0) POSTS[idx].st = 'aprovado';
+      renderMobGrid();
+      closeMobDetail();
+      showToast('mob-toast', '✓ Post aprovado!', 'approve');
+    });
+  }
+  var fbBtn = body.querySelector('[data-feedback]');
+  if (fbBtn) {
+    fbBtn.addEventListener('click', function() {
+      closeMobDetail();
+      showToast('mob-toast', '💬 Solicitação enviada ao criador', 'feedback');
+    });
+  }
+
+  document.getElementById('mob-detail-overlay').classList.add('on');
+}
+
+function closeMobDetail() {
+  document.getElementById('mob-detail-overlay').classList.remove('on');
+}
+
+document.getElementById('mob-detail-close').addEventListener('click', closeMobDetail);
+document.getElementById('mob-detail-overlay').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('mob-detail-overlay')) closeMobDetail();
+});
+
+// ─────────────────────────
+// DESKTOP — post detail col
+// ─────────────────────────
+function selectDeskPost(pid) {
+  selectedPost = pid;
+  var p = POSTS.find(function(x){ return x.id === pid; });
+  if (!p) return;
+
+  // update title
+  document.getElementById('desk-detail-title').textContent = p.type + ' · ' + p.day + ' de março';
+
+  // highlight in both grids
+  document.querySelectorAll('#desk-ig-grid .ig-grid-cell').forEach(function(cell) {
+    cell.style.outline = parseInt(cell.dataset.pid) === pid ? '2px solid var(--accent)' : 'none';
+    cell.style.outlineOffset = '-2px';
+  });
+  renderMiniGrid();
+
+  // render detail
+  var body = document.getElementById('desk-detail-body');
+  body.innerHTML = '<div class="post-preview-card">'
+    + '<div class="ppc-media" style="background:' + cellBg(p.st) + ';">' + p.icon
+    + (p.st !== 'publicado' ? '<div style="position:absolute;inset:0;border:2px dashed rgba(255,255,255,.2);border-radius:inherit;"></div>' : '')
+    + '</div>'
+    + '<div class="ppc-info">'
+    + '<div class="ppc-client">Loja Aurora · ' + p.icon + ' ' + p.type + '</div>'
+    + '<div class="ppc-caption">' + p.cap + '</div>'
+    + '<div class="ppc-meta">'
+    + '<span style="font-size:11px;color:var(--muted);font-family:\'DM Mono\',monospace;">' + p.day + '/03 · 18:00</span>'
+    + '<span style="margin-left:auto;">' + statusBadge(p.st) + '</span>'
+    + '</div></div></div>'
+
+    // feedback thread se tiver
+    + (p.st === 'aguardando' || p.st === 'alteracao' || p.st === 'aprovado'
+      ? '<div><div class="sec-ttl">Histórico</div>'
+        + '<div class="fb-thread">'
+        + '<div class="fb-item"><div class="fb-av" style="background:#fb923c;">C</div>'
+        + '<div class="fb-bub"><div class="fb-bub-auth">Cliente · 18/03</div>'
+        + '<div class="fb-bub-txt">Pode verificar se a legenda está correta antes de publicar?</div></div></div>'
+        + (p.st !== 'aguardando'
+          ? '<div class="fb-item right"><div class="fb-av" style="background:var(--accent);">A</div>'
+            + '<div class="fb-bub mine"><div class="fb-bub-auth">Você · 19/03</div>'
+            + '<div class="fb-bub-txt">Legenda revisada e corrigida! Pode aprovar quando quiser.</div></div></div>'
+          : '')
+        + '</div></div>'
+      : '')
+
+    // ações
+    + '<div class="action-sec"><div class="action-sec-ttl">Ações</div>'
+    + (p.st !== 'publicado' && p.st !== 'aprovado'
+      ? '<button class="btn btn-approve btn-full" id="desk-approve-' + p.id + '">✓ Aprovar post</button>'
+        + '<button class="btn btn-fb btn-full" id="desk-fb-' + p.id + '">💬 Solicitar alteração</button>'
+      : p.st === 'aprovado'
+        ? '<div style="text-align:center;padding:12px;font-size:13px;color:var(--green);">✓ Aprovado pelo cliente</div>'
+        : '<div style="text-align:center;padding:12px;font-size:13px;color:var(--blue);">📸 Publicado no Instagram</div>')
+    + '<button class="btn btn-ghost btn-full btn-sm">✏️ Editar post</button>'
+    + '</div>';
+
+  // bind buttons
+  var apvBtn = document.getElementById('desk-approve-' + p.id);
+  if (apvBtn) {
+    apvBtn.addEventListener('click', function() {
+      var idx = POSTS.findIndex(function(x){ return x.id === pid; });
+      if (idx >= 0) POSTS[idx].st = 'aprovado';
+      renderDeskGrid();
+      renderMiniGrid();
+      selectDeskPost(pid);
+      showToast('desk-toast', '✓ Post aprovado com sucesso!', 'approve');
+    });
+  }
+  var fbBtn = document.getElementById('desk-fb-' + p.id);
+  if (fbBtn) {
+    fbBtn.addEventListener('click', function() {
+      document.getElementById('desk-fb-modal').classList.add('on');
+      setTimeout(function(){ document.getElementById('desk-fb-text').focus(); }, 250);
+    });
+  }
+}
+
+// ─────────────────────────
+// MODAL — link mobile
+// ─────────────────────────
+function openMobLinkModal() { document.getElementById('mob-link-modal').classList.add('on'); }
+function closeMobLinkModal() { document.getElementById('mob-link-modal').classList.remove('on'); }
+
+document.getElementById('mob-link-btn').addEventListener('click', openMobLinkModal);
+document.getElementById('mob-link-bar-btn').addEventListener('click', openMobLinkModal);
+document.getElementById('mob-link-cls').addEventListener('click', closeMobLinkModal);
+document.getElementById('mob-link-cancel').addEventListener('click', closeMobLinkModal);
+document.getElementById('mob-link-modal').addEventListener('click', function(e){ if(e.target===this) closeMobLinkModal(); });
+document.getElementById('mob-link-copy').addEventListener('click', function() {
+  closeMobLinkModal();
+  showToast('mob-toast', '📋 Link copiado para a área de transferência', 'link');
+});
+
+// ─────────────────────────
+// MODAL — link desktop
+// ─────────────────────────
+function openDeskLinkModal() { document.getElementById('desk-link-modal').classList.add('on'); }
+function closeDeskLinkModal() { document.getElementById('desk-link-modal').classList.remove('on'); }
+
+document.getElementById('desk-link-btn').addEventListener('click', openDeskLinkModal);
+document.getElementById('desk-link-cls').addEventListener('click', closeDeskLinkModal);
+document.getElementById('desk-link-cancel').addEventListener('click', closeDeskLinkModal);
+document.getElementById('desk-link-modal').addEventListener('click', function(e){ if(e.target===this) closeDeskLinkModal(); });
+document.getElementById('desk-link-copy-modal').addEventListener('click', function() {
+  closeDeskLinkModal();
+  showToast('desk-toast', '📋 Link copiado para a área de transferência', 'link');
+});
+document.getElementById('desk-copy-link').addEventListener('click', function() {
+  showToast('desk-toast', '📋 Link copiado para a área de transferência', 'link');
+});
+document.getElementById('desk-new-link').addEventListener('click', function() {
+  openDeskLinkModal();
+});
+
+// ─────────────────────────
+// MODAL — feedback desktop
+// ─────────────────────────
+function closeDeskFbModal() { document.getElementById('desk-fb-modal').classList.remove('on'); }
+document.getElementById('desk-fb-cls').addEventListener('click', closeDeskFbModal);
+document.getElementById('desk-fb-cancel').addEventListener('click', closeDeskFbModal);
+document.getElementById('desk-fb-modal').addEventListener('click', function(e){ if(e.target===this) closeDeskFbModal(); });
+document.getElementById('desk-fb-send').addEventListener('click', function() {
+  var txt = document.getElementById('desk-fb-text').value.trim();
+  if (!txt) { document.getElementById('desk-fb-text').style.borderColor='var(--red)'; return; }
+  if (selectedPost) {
+    var idx = POSTS.findIndex(function(x){ return x.id === selectedPost; });
+    if (idx >= 0) POSTS[idx].st = 'alteracao';
+    renderDeskGrid();
+    renderMiniGrid();
+    selectDeskPost(selectedPost);
+  }
+  closeDeskFbModal();
+  document.getElementById('desk-fb-text').value = '';
+  showToast('desk-toast', '💬 Alteração enviada ao criador', 'feedback');
+});
+
+// ─────────────────────────
+// INIT
+// ─────────────────────────
+renderMobGrid();
+renderDeskGrid();
+renderMiniGrid();
+
+})();
+</script>
+</body>
+</html>

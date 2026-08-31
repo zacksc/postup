@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanban de Feedbacks</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0d0f14;--surf:#13161e;--surf2:#1c2030;--surf3:#242840;
+  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.13);--bdr3:rgba(255,255,255,0.22);
+  --txt:#e8eaf0;--muted:#6b7080;--muted2:#3a3f52;
+  --accent:#7c6af7;--accent2:#a78bfa;--abg:rgba(124,106,247,0.12);
+  --green:#34d399;--gbg:rgba(52,211,153,0.11);--gbdr:rgba(52,211,153,0.3);
+  --orange:#fb923c;--obg:rgba(251,146,60,0.11);--obdr:rgba(251,146,60,0.3);
+  --red:#f87171;--rbg:rgba(248,113,113,0.11);--rbdr:rgba(248,113,113,0.3);
+  --blue:#60a5fa;--bbg:rgba(96,165,250,0.11);--bbdr:rgba(96,165,250,0.3);
+  --yellow:#fbbf24;--ybg:rgba(251,191,36,0.11);--ybdr:rgba(251,191,36,0.3);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);font-size:14px;min-height:100vh;}
+
+.switcher{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--bg);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:90;}
+.sw-btn{padding:6px 20px;border-radius:8px;border:1px solid var(--bdr2);background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .18s;}
+.sw-btn:hover{background:var(--surf2);color:var(--txt);}
+.sw-btn.on{background:var(--abg);border-color:var(--accent);color:var(--accent2);}
+.view{display:none;}.view.on{display:block;}
+
+/* ══ MOBILE ══ */
+.mob-shell{max-width:390px;margin:24px auto 48px;background:var(--surf);border-radius:24px;overflow:hidden;border:1px solid var(--bdr2);box-shadow:0 28px 72px rgba(0,0,0,.65);}
+.mob-sb{height:44px;background:var(--surf);display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:12px;color:var(--muted);}
+.mob-sb .sbt{font-weight:600;font-size:13px;color:var(--txt);}
+.mob-hdr{height:52px;background:var(--surf);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 16px;gap:10px;}
+.mob-ttl{font-size:15px;font-weight:600;letter-spacing:-.3px;flex:1;}
+.mob-icon-btn{width:32px;height:32px;border-radius:8px;background:var(--surf2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:14px;}
+.mob-scroll{overflow-y:auto;max-height:680px;}
+.mob-scroll::-webkit-scrollbar{width:0;}
+
+/* tab filter */
+.mob-tab-bar{display:flex;padding:10px 14px;gap:6px;overflow-x:auto;border-bottom:1px solid var(--bdr);}
+.mob-tab-bar::-webkit-scrollbar{height:0;}
+.mob-tab{padding:5px 12px;border-radius:20px;border:1px solid var(--bdr);background:transparent;color:var(--muted);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0;}
+.mob-tab.on{border-color:var(--accent);background:var(--abg);color:var(--accent2);}
+.mob-tab.red.on{border-color:var(--rbdr);background:var(--rbg);color:var(--red);}
+.mob-tab.orange.on{border-color:var(--obdr);background:var(--obg);color:var(--orange);}
+.mob-tab.green.on{border-color:var(--gbdr);background:var(--gbg);color:var(--green);}
+
+/* feedback cards mobile */
+.fb-group{padding:0 14px;}
+.fb-group-ttl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:14px 0 8px;}
+.fb-card-mob{background:var(--surf2);border:1px solid var(--bdr);border-radius:11px;padding:13px;margin-bottom:8px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
+.fb-card-mob::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.fb-card-mob.alteracao::before{background:var(--red);}
+.fb-card-mob.aguardando::before{background:var(--orange);}
+.fb-card-mob.resolvido::before{background:var(--green);}
+.fb-card-mob:hover{border-color:var(--bdr2);background:var(--surf3);}
+.fcm-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.fcm-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.fcm-client{font-size:12px;font-weight:600;flex:1;}
+.fcm-time{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
+.fcm-post{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.fcm-text{font-size:12px;line-height:1.5;color:var(--txt);margin-bottom:8px;}
+.fcm-foot{display:flex;align-items:center;gap:6px;}
+.sbadge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:500;}
+.sbadge.alteracao{background:var(--rbg);color:var(--red);}
+.sbadge.aguardando{background:var(--obg);color:var(--orange);}
+.sbadge.resolvido{background:var(--gbg);color:var(--green);}
+.sbadge.urgente{background:var(--ybg);color:var(--yellow);}
+.fcm-btn{padding:4px 10px;border-radius:6px;border:none;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;background:var(--surf3);color:var(--txt);}
+
+/* bottom nav */
+.mob-bnav{height:60px;background:var(--surf);border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-around;}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 12px;border-radius:10px;color:var(--muted);font-size:10px;}
+.bnav-item.on{color:var(--accent2);}
+.bnav-icon{font-size:20px;}
+
+/* ══ DESKTOP ══ */
+.desk-wrap{max-width:1280px;margin:24px auto 48px;padding:0 24px;}
+.desk-shell{background:var(--surf);border-radius:16px;border:1px solid var(--bdr2);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.desk-hdr{height:52px;background:var(--surf);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 16px;gap:12px;}
+.d-logo{font-size:15px;font-weight:600;color:var(--accent2);letter-spacing:-.3px;}
+.d-div{width:1px;height:18px;background:var(--bdr2);}
+.d-bc{font-size:13px;color:var(--muted);}
+.d-bc span{color:var(--txt);}
+.d-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.d-ic{width:32px;height:32px;background:var(--surf2);border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;}
+.d-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ec4899);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
+.desk-body{display:flex;min-height:720px;}
+.d-nav{width:52px;background:var(--surf);border-right:1px solid var(--bdr);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;flex-shrink:0;}
+.d-ni{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:17px;transition:background .15s,color .15s;}
+.d-ni:hover{background:var(--surf2);color:var(--txt);}
+.d-ni.on{background:rgba(124,106,247,.15);color:var(--accent2);}
+.d-nbot{margin-top:auto;}
+
+/* kanban area */
+.kanban-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.kanban-topbar{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.kanban-ttl{font-size:16px;font-weight:600;letter-spacing:-.3px;}
+.filter-chips{display:flex;gap:6px;margin-left:auto;}
+.fchip{padding:5px 12px;border-radius:20px;border:1px solid var(--bdr);background:transparent;color:var(--muted);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;}
+.fchip:hover{border-color:var(--bdr2);color:var(--txt);}
+.fchip.on{border-color:var(--accent);background:var(--abg);color:var(--accent2);}
+
+.kanban-board{flex:1;overflow-x:auto;overflow-y:hidden;display:flex;padding:16px 20px;gap:16px;}
+.kanban-board::-webkit-scrollbar{height:6px;}.kanban-board::-webkit-scrollbar-track{background:transparent;}.kanban-board::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:3px;}
+
+/* kanban column */
+.kb-col{width:280px;flex-shrink:0;display:flex;flex-direction:column;background:var(--surf2);border-radius:12px;border:1px solid var(--bdr);overflow:hidden;}
+.kb-col-hdr{padding:12px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.kb-col-dot{width:8px;height:8px;border-radius:50%;}
+.kb-col-ttl{font-size:13px;font-weight:600;flex:1;}
+.kb-col-count{font-size:11px;color:var(--muted);background:var(--surf3);padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;}
+.kb-col-body{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;}
+.kb-col-body::-webkit-scrollbar{width:3px;}.kb-col-body::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:3px;}
+
+/* kanban card */
+.kb-card{background:var(--surf);border:1px solid var(--bdr);border-radius:9px;padding:12px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
+.kb-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.kb-card.col-alteracao::before{background:var(--red);}
+.kb-card.col-aguardando::before{background:var(--orange);}
+.kb-card.col-em-revisao::before{background:var(--yellow);}
+.kb-card.col-resolvido::before{background:var(--green);}
+.kb-card:hover{border-color:var(--bdr2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3);}
+.kb-card.dragging{opacity:.5;}
+.kbc-top{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.kbc-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;}
+.kbc-client{font-size:11px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kbc-time{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;flex-shrink:0;}
+.kbc-post{font-size:10px;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:4px;}
+.kbc-text{font-size:12px;line-height:1.4;color:var(--txt);margin-bottom:8px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
+.kbc-foot{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.kbc-tag{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--surf2);color:var(--muted);}
+.kbc-urgente{background:var(--ybg);color:var(--yellow);}
+.kbc-move{margin-left:auto;padding:4px 8px;border-radius:6px;border:1px solid var(--bdr2);background:transparent;color:var(--muted);font-size:10px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;}
+.kbc-move:hover{border-color:var(--accent);color:var(--accent2);}
+
+/* empty col */
+.kb-col-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:24px 12px;color:var(--muted);text-align:center;border:1.5px dashed var(--bdr2);border-radius:8px;flex:1;}
+.ke-icon{font-size:22px;opacity:.3;}
+.ke-txt{font-size:11px;}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;}
+.modal-ov.on{opacity:1;pointer-events:all;}
+.modal-box{background:var(--surf);border:1px solid var(--bdr2);border-radius:16px;width:500px;max-width:92vw;overflow:hidden;transform:scale(.95) translateY(8px);transition:transform .25s cubic-bezier(.4,0,.2,1);}
+.modal-ov.on .modal-box{transform:scale(1) translateY(0);}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--bdr);}
+.modal-ttl{font-size:15px;font-weight:600;letter-spacing:-.3px;}
+.modal-cls{width:28px;height:28px;border-radius:7px;background:var(--surf2);border:1px solid var(--bdr);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;}
+.modal-cls:hover{color:var(--txt);}
+.modal-body{padding:20px;max-height:60vh;overflow-y:auto;}
+.modal-footer{padding:0 20px 20px;display:flex;gap:8px;justify-content:flex-end;}
+
+.btn{padding:9px 16px;border-radius:9px;border:none;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;justify-content:center;transition:all .15s;}
+.btn-ghost{background:var(--surf2);border:1px solid var(--bdr2);color:var(--txt);}
+.btn-ghost:hover{background:var(--surf3);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{opacity:.85;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+
+.inp{width:100%;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:9px;padding:9px 12px;color:var(--txt);font-family:inherit;font-size:13px;outline:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--accent);}
+textarea.inp{resize:none;min-height:80px;line-height:1.5;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surf);border:1px solid var(--bdr2);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px;opacity:0;transition:all .28s;z-index:300;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:var(--gbdr);color:var(--green);}
+
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.flbl{font-size:12px;font-weight:500;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeUp .2s ease;}
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <button class="sw-btn on" id="sw-mob">📱 Mobile</button>
+  <button class="sw-btn" id="sw-dsk">🖥️ Desktop</button>
+</div>
+
+<!-- ══ MOBILE ══ -->
+<div class="view on" id="view-mob">
+  <div class="mob-shell">
+    <div class="mob-sb"><span class="sbt">19:42</span><span>●●● 5G 🔋</span></div>
+    <div class="mob-hdr">
+      <span class="mob-ttl">Feedbacks</span>
+      <div class="mob-icon-btn">⚙️</div>
+    </div>
+    <div class="mob-tab-bar">
+      <button class="mob-tab on" data-filter="todos">Todos (8)</button>
+      <button class="mob-tab red" data-filter="alteracao">Em alteração (3)</button>
+      <button class="mob-tab orange" data-filter="aguardando">Aguardando (4)</button>
+      <button class="mob-tab green" data-filter="resolvido">Resolvidos (1)</button>
+    </div>
+    <div class="mob-scroll">
+      <div id="mob-fb-list"></div>
+    </div>
+    <div class="mob-bnav">
+      <div class="bnav-item"><div class="bnav-icon">🏠</div>Home</div>
+      <div class="bnav-item"><div class="bnav-icon">📅</div>Agenda</div>
+      <div class="bnav-item"><div class="bnav-icon">👥</div>Clientes</div>
+      <div class="bnav-item on"><div class="bnav-icon">💬</div>Feedbacks</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DESKTOP ══ -->
+<div class="view" id="view-dsk">
+  <div class="desk-wrap">
+    <div class="desk-shell">
+      <div class="desk-hdr">
+        <span class="d-logo">postflow</span>
+        <div class="d-div"></div>
+        <div class="d-bc"><span>Feedbacks / A fazer</span></div>
+        <div class="d-right">
+          <div class="d-ic">🔔</div>
+          <div class="d-av">A</div>
+        </div>
+      </div>
+      <div class="desk-body">
+        <nav class="d-nav">
+          <div class="d-ni">🏠</div>
+          <div class="d-ni">📅</div>
+          <div class="d-ni">👥</div>
+          <div class="d-ni on">💬</div>
+          <div class="d-nbot"><div class="d-ni">⚙️</div></div>
+        </nav>
+        <div class="kanban-area">
+          <div class="kanban-topbar">
+            <span class="kanban-ttl">Kanban de Feedbacks</span>
+            <span style="font-size:12px;color:var(--muted);">8 itens no total</span>
+            <div class="filter-chips">
+              <button class="fchip on" data-fc="todos">Todos</button>
+              <button class="fchip" data-fc="aurora" style="border-color:rgba(244,114,182,.3);color:#f472b6;">Loja Aurora</button>
+              <button class="fchip" data-fc="rex" style="border-color:rgba(52,211,153,.3);color:#34d399;">Barbearia Rex</button>
+              <button class="fchip" data-fc="fit" style="border-color:rgba(251,146,60,.3);color:#fb923c;">Studio Fit</button>
+              <button class="fchip" data-fc="cafe" style="border-color:rgba(96,165,250,.3);color:#60a5fa;">Café Nômade</button>
+            </div>
+          </div>
+          <div class="kanban-board" id="kanban-board"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL detalhe feedback -->
+  <div class="modal-ov" id="desk-fb-modal">
+    <div class="modal-box fade-in">
+      <div class="modal-hdr">
+        <div class="modal-ttl" id="modal-ttl">Feedback</div>
+        <div class="modal-cls" id="modal-cls">×</div>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="modal-cancel">Fechar</button>
+        <button class="btn btn-green" id="modal-resolve">✓ Marcar como resolvido</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="desk-toast"></div>
+</div>
+
+<script>
+(function(){
+
+var FEEDBACKS = [
+  {id:1,client:'Loja Aurora',  color:'#f472b6',cid:'aurora',post:'Reels verão',type:'🎬',text:'Trocar a música de fundo por algo mais animado. A atual está muito lenta para o estilo da coleção.',      date:'22/03',urgente:true, col:'alteracao'},
+  {id:2,client:'Loja Aurora',  color:'#f472b6',cid:'aurora',post:'Foto produto',type:'📷',text:'Foto está com fundo escuro. Preciso que use a versão com fundo branco que enviei por email.',               date:'21/03',urgente:false,col:'alteracao'},
+  {id:3,client:'Barbearia Rex',color:'#34d399',cid:'rex',   post:'Reels degradê',type:'🎬',text:'Ficou incrível! Só coloca a logo da barbearia no canto inferior direito antes de publicar.',               date:'20/03',urgente:false,col:'em-revisao'},
+  {id:4,client:'Studio Fit',   color:'#fb923c',cid:'fit',   post:'Carrossel dieta',type:'🖼️',text:'Slide 3 está com erro de digitação no nome do nutricionista. Dr. Rodrigo, não Dr. Roberto.',              date:'20/03',urgente:true, col:'alteracao'},
+  {id:5,client:'Café Nômade',  color:'#60a5fa',cid:'cafe',  post:'Foto cold brew',type:'📷',text:'Pode adicionar o preço do cold brew no final? R$ 18,90. Clientes sempre perguntam.',                      date:'19/03',urgente:false,col:'aguardando'},
+  {id:6,client:'Loja Aurora',  color:'#f472b6',cid:'aurora',post:'Stories promo',type:'⭕', text:'O link da bio que aparece no CTA do story está desatualizado. Atualizar para lojaaurora.com.br/verao.',   date:'18/03',urgente:false,col:'aguardando'},
+  {id:7,client:'Barbearia Rex',color:'#34d399',cid:'rex',   post:'Foto produto',type:'📷',text:'Ótimo! Aprovado para publicar na quinta às 10h conforme combinado.',                                         date:'17/03',urgente:false,col:'resolvido'},
+  {id:8,client:'Studio Fit',   color:'#fb923c',cid:'fit',   post:'Reels HIIT',type:'🎬',   text:'Pode verificar se a legenda está de acordo com o briefing? Parece que faltou mencionar o @professor.',     date:'17/03',urgente:false,col:'aguardando'},
+];
+
+var COL_DEFS = [
+  {id:'alteracao', label:'Em alteração', dot:'var(--red)',   count:0},
+  {id:'em-revisao',label:'Em revisão',   dot:'var(--yellow)',count:0},
+  {id:'aguardando',label:'Aguardando',   dot:'var(--orange)',count:0},
+  {id:'resolvido', label:'Resolvido',    dot:'var(--green)', count:0},
+];
+
+var COL_NEXT = {
+  'alteracao':'em-revisao',
+  'em-revisao':'resolvido',
+  'aguardando':'resolvido',
+};
+
+var selectedFb = null;
+var mobFilter = 'todos';
+var deskFilter = 'todos';
+
+function showToast(id,msg,type){
+  var t=document.getElementById(id);
+  t.textContent=msg; t.className='toast '+type+' on';
+  setTimeout(function(){t.classList.remove('on');},3000);
+}
+
+// SWITCHER
+document.getElementById('sw-mob').addEventListener('click',function(){
+  document.getElementById('view-mob').classList.add('on');
+  document.getElementById('view-dsk').classList.remove('on');
+  document.getElementById('sw-mob').classList.add('on');
+  document.getElementById('sw-dsk').classList.remove('on');
+});
+document.getElementById('sw-dsk').addEventListener('click',function(){
+  document.getElementById('view-dsk').classList.add('on');
+  document.getElementById('view-mob').classList.remove('on');
+  document.getElementById('sw-dsk').classList.add('on');
+  document.getElementById('sw-mob').classList.remove('on');
+});
+
+// ── MOBILE ──
+function renderMobList(){
+  var filtered = mobFilter==='todos'
+    ? FEEDBACKS
+    : FEEDBACKS.filter(function(f){return f.col===mobFilter;});
+
+  if(filtered.length===0){
+    document.getElementById('mob-fb-list').innerHTML='<div style="text-align:center;padding:48px 20px;color:var(--muted);font-size:13px;">Nenhum feedback nessa categoria.</div>';
+    return;
+  }
+
+  // group by col
+  var groups={};
+  var colOrder=['alteracao','em-revisao','aguardando','resolvido'];
+  filtered.forEach(function(f){
+    if(!groups[f.col]) groups[f.col]=[];
+    groups[f.col].push(f);
+  });
+  var colLabels={alteracao:'Em alteração',aguardando:'Aguardando','em-revisao':'Em revisão',resolvido:'Resolvido'};
+
+  var html='';
+  colOrder.forEach(function(col){
+    if(!groups[col]||groups[col].length===0) return;
+    html+='<div class="fb-group"><div class="fb-group-ttl">'+colLabels[col]+' ('+groups[col].length+')</div>';
+    groups[col].forEach(function(f){
+      html+='<div class="fb-card-mob '+f.col+'" data-fid="'+f.id+'">'
+        +'<div class="fcm-top">'
+        +'<div class="fcm-av" style="background:'+f.color+'">'+f.client[0]+'</div>'
+        +'<div class="fcm-client">'+f.client+'</div>'
+        +(f.urgente?'<span class="sbadge urgente">🔴 Urgente</span>':'')
+        +'<div class="fcm-time">'+f.date+'</div>'
+        +'</div>'
+        +'<div class="fcm-post">'+f.type+' '+f.post+'</div>'
+        +'<div class="fcm-text">'+f.text+'</div>'
+        +'<div class="fcm-foot">'
+        +(f.col!=='resolvido'?'<button class="fcm-btn" data-resolve="'+f.id+'">✓ Resolver</button>':'<span class="sbadge resolvido">✓ Resolvido</span>')
+        +'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+  });
+
+  document.getElementById('mob-fb-list').innerHTML=html;
+
+  document.querySelectorAll('[data-resolve]').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var fid=parseInt(btn.dataset.resolve);
+      var idx=FEEDBACKS.findIndex(function(f){return f.id===fid;});
+      if(idx>=0) FEEDBACKS[idx].col='resolvido';
+      renderMobList();
+      renderKanban();
+    });
+  });
+}
+
+// tab filter
+document.querySelectorAll('.mob-tab').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('.mob-tab').forEach(function(t){t.classList.remove('on');});
+    tab.classList.add('on');
+    mobFilter=tab.dataset.filter;
+    renderMobList();
+  });
+});
+
+// ── DESKTOP KANBAN ──
+function renderKanban(){
+  var board=document.getElementById('kanban-board');
+  var html='';
+
+  COL_DEFS.forEach(function(col){
+    var cards=FEEDBACKS.filter(function(f){
+      if(f.col!==col.id) return false;
+      if(deskFilter!=='todos'&&f.cid!==deskFilter) return false;
+      return true;
+    });
+
+    html+='<div class="kb-col" data-col="'+col.id+'">'
+      +'<div class="kb-col-hdr">'
+      +'<div class="kb-col-dot" style="background:'+col.dot+'"></div>'
+      +'<div class="kb-col-ttl">'+col.label+'</div>'
+      +'<div class="kb-col-count">'+cards.length+'</div>'
+      +'</div>'
+      +'<div class="kb-col-body">';
+
+    if(cards.length===0){
+      html+='<div class="kb-col-empty"><div class="ke-icon">✓</div><div class="ke-txt">Nenhum item aqui</div></div>';
+    } else {
+      cards.forEach(function(f){
+        var nextCol=COL_NEXT[f.col];
+        var nextLabel=nextCol==='resolvido'?'✓ Resolver':nextCol==='em-revisao'?'→ Revisão':'→ Avançar';
+        html+='<div class="kb-card col-'+f.col+'" data-fid="'+f.id+'">'
+          +'<div class="kbc-top">'
+          +'<div class="kbc-av" style="background:'+f.color+'">'+f.client[0]+'</div>'
+          +'<div class="kbc-client">'+f.client+'</div>'
+          +'<div class="kbc-time">'+f.date+'</div>'
+          +'</div>'
+          +'<div class="kbc-post">'+f.type+' '+f.post+'</div>'
+          +'<div class="kbc-text">'+f.text+'</div>'
+          +'<div class="kbc-foot">'
+          +'<span class="kbc-tag">'+f.type+'</span>'
+          +(f.urgente?'<span class="kbc-tag kbc-urgente">🔴 Urgente</span>':'')
+          +(nextCol?'<button class="kbc-move" data-fid="'+f.id+'" data-next="'+nextCol+'">'+nextLabel+'</button>':'')
+          +'</div>'
+          +'</div>';
+      });
+    }
+
+    html+='</div></div>';
+  });
+
+  board.innerHTML=html;
+
+  // card click — open modal
+  board.querySelectorAll('.kb-card').forEach(function(card){
+    card.addEventListener('click',function(e){
+      if(e.target.classList.contains('kbc-move')) return;
+      openFbModal(parseInt(card.dataset.fid));
+    });
+  });
+
+  // move buttons
+  board.querySelectorAll('.kbc-move').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var fid=parseInt(btn.dataset.fid);
+      var next=btn.dataset.next;
+      var idx=FEEDBACKS.findIndex(function(f){return f.id===fid;});
+      if(idx>=0) FEEDBACKS[idx].col=next;
+      renderKanban();
+      renderMobList();
+      if(next==='resolvido') showToast('desk-toast','✓ Feedback marcado como resolvido','ok');
+    });
+  });
+}
+
+function openFbModal(fid){
+  var f=FEEDBACKS.find(function(x){return x.id===fid;});
+  if(!f) return;
+  selectedFb=fid;
+  document.getElementById('modal-ttl').textContent=f.client+' · '+f.post;
+  document.getElementById('modal-body').innerHTML=
+    '<div style="background:var(--surf2);border:1px solid var(--bdr);border-radius:9px;padding:12px 14px;margin-bottom:14px;">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+    +'<div style="width:26px;height:26px;border-radius:50%;background:'+f.color+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">'+f.client[0]+'</div>'
+    +'<div style="font-size:13px;font-weight:600;">'+f.client+'</div>'
+    +(f.urgente?'<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:var(--ybg);color:var(--yellow);">🔴 Urgente</span>':'')
+    +'<span style="margin-left:auto;font-size:11px;color:var(--muted);font-family:\'DM Mono\',monospace;">'+f.date+'</span>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">'+f.type+' '+f.post+'</div>'
+    +'<div style="font-size:13px;line-height:1.6;">'+f.text+'</div>'
+    +'</div>'
+    +'<div class="field"><label class="flbl">Sua resposta / anotação</label>'
+    +'<textarea class="inp" id="modal-reply" placeholder="Anote o que foi feito ou responda ao cliente..."></textarea>'
+    +'</div>';
+
+  var resolveBtn=document.getElementById('modal-resolve');
+  resolveBtn.style.display=f.col==='resolvido'?'none':'flex';
+  document.getElementById('desk-fb-modal').classList.add('on');
+}
+
+function closeFbModal(){document.getElementById('desk-fb-modal').classList.remove('on');}
+document.getElementById('modal-cls').addEventListener('click',closeFbModal);
+document.getElementById('modal-cancel').addEventListener('click',closeFbModal);
+document.getElementById('desk-fb-modal').addEventListener('click',function(e){if(e.target===this)closeFbModal();});
+document.getElementById('modal-resolve').addEventListener('click',function(){
+  if(selectedFb===null) return;
+  var idx=FEEDBACKS.findIndex(function(f){return f.id===selectedFb;});
+  if(idx>=0) FEEDBACKS[idx].col='resolvido';
+  closeFbModal();
+  renderKanban();
+  renderMobList();
+  showToast('desk-toast','✓ Feedback marcado como resolvido','ok');
+});
+
+// filter chips desktop
+document.querySelectorAll('.fchip').forEach(function(chip){
+  chip.addEventListener('click',function(){
+    document.querySelectorAll('.fchip').forEach(function(c){c.classList.remove('on');});
+    chip.classList.add('on');
+    deskFilter=chip.dataset.fc;
+    renderKanban();
+  });
+});
+
+// INIT
+renderMobList();
+renderKanban();
+})();
+</script>
+</body>
+</html>

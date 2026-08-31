@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clientes</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0d0f14;--surf:#13161e;--surf2:#1c2030;--surf3:#242840;
+  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.13);--bdr3:rgba(255,255,255,0.22);
+  --txt:#e8eaf0;--muted:#6b7080;--muted2:#3a3f52;
+  --accent:#7c6af7;--accent2:#a78bfa;--abg:rgba(124,106,247,0.12);
+  --green:#34d399;--gbg:rgba(52,211,153,0.11);--gbdr:rgba(52,211,153,0.3);
+  --orange:#fb923c;--obg:rgba(251,146,60,0.11);--obdr:rgba(251,146,60,0.3);
+  --red:#f87171;--rbg:rgba(248,113,113,0.11);--rbdr:rgba(248,113,113,0.3);
+  --blue:#60a5fa;--bbg:rgba(96,165,250,0.11);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);font-size:14px;min-height:100vh;}
+
+.switcher{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--bg);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:90;}
+.sw-btn{padding:6px 20px;border-radius:8px;border:1px solid var(--bdr2);background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .18s;}
+.sw-btn:hover{background:var(--surf2);color:var(--txt);}
+.sw-btn.on{background:var(--abg);border-color:var(--accent);color:var(--accent2);}
+.view{display:none;}.view.on{display:block;}
+
+/* ══ MOBILE ══ */
+.mob-shell{max-width:390px;margin:24px auto 48px;background:var(--surf);border-radius:24px;overflow:hidden;border:1px solid var(--bdr2);box-shadow:0 28px 72px rgba(0,0,0,.65);}
+.mob-sb{height:44px;background:var(--surf);display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:12px;color:var(--muted);}
+.mob-sb .sbt{font-weight:600;font-size:13px;color:var(--txt);}
+.mob-hdr{height:52px;background:var(--surf);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 16px;gap:10px;}
+.mob-back{width:32px;height:32px;border-radius:8px;background:var(--surf2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px;transition:all .15s;}
+.mob-back:hover{color:var(--txt);}
+.mob-ttl{font-size:15px;font-weight:600;letter-spacing:-.3px;flex:1;}
+.mob-icon-btn{width:32px;height:32px;border-radius:8px;background:var(--surf2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:14px;transition:all .15s;}
+.mob-icon-btn:hover{color:var(--txt);border-color:var(--bdr2);}
+.mob-icon-btn.pri{background:var(--abg);border-color:var(--accent);color:var(--accent2);}
+.mob-scroll{overflow-y:auto;max-height:700px;}
+.mob-scroll::-webkit-scrollbar{width:0;}
+
+/* screen switcher internal */
+.screen{display:none;}.screen.on{display:block;}
+
+/* search */
+.search-wrap{padding:12px 14px;border-bottom:1px solid var(--bdr);}
+.search-inp{width:100%;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:9px;padding:8px 12px 8px 36px;color:var(--txt);font-family:inherit;font-size:13px;outline:none;transition:border-color .15s;position:relative;}
+.search-inp:focus{border-color:var(--accent);}
+.search-inp::placeholder{color:var(--muted2);}
+.search-wrap-inner{position:relative;}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none;}
+
+/* client list */
+.client-list{display:flex;flex-direction:column;gap:0;}
+.client-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .15s;}
+.client-row:hover{background:var(--surf2);}
+.client-row:last-child{border-bottom:none;}
+.cr-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;}
+.cr-info{flex:1;min-width:0;}
+.cr-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cr-handle{font-size:11px;color:var(--muted);}
+.cr-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.cr-posts{font-size:11px;color:var(--muted);}
+.cr-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;}
+.cr-badge.pend{background:var(--obg);color:var(--orange);}
+.cr-badge.ok{background:var(--gbg);color:var(--green);}
+
+/* client detail mobile */
+.det-hero{padding:20px 16px 16px;border-bottom:1px solid var(--bdr);}
+.det-hero-top{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.det-av{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0;}
+.det-name{font-size:18px;font-weight:600;letter-spacing:-.4px;}
+.det-handle{font-size:12px;color:var(--muted);}
+.det-stats{display:flex;gap:8px;flex-wrap:wrap;}
+.det-stat{background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;flex:1;min-width:70px;}
+.det-stat-n{font-size:18px;font-weight:600;letter-spacing:-1px;}
+.det-stat-l{font-size:10px;color:var(--muted);}
+
+.det-section{padding:14px 16px;border-bottom:1px solid var(--bdr);}
+.det-sec-ttl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px;}
+.det-post-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);}
+.det-post-row:last-child{border-bottom:none;}
+.det-post-icon{width:36px;height:36px;border-radius:7px;background:var(--surf3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.det-post-info{flex:1;min-width:0;}
+.det-post-ttl{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.det-post-sub{font-size:10px;color:var(--muted);}
+.sbadge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;}
+.sbadge.aprovado{background:var(--gbg);color:var(--green);}
+.sbadge.aguardando{background:var(--obg);color:var(--orange);}
+.sbadge.alteracao{background:var(--rbg);color:var(--red);}
+.sbadge.rascunho{background:var(--surf2);color:var(--muted);}
+.sbadge.publicado{background:var(--bbg);color:var(--blue);}
+
+.brief-grid{display:flex;flex-direction:column;gap:8px;}
+.brief-item{background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;}
+.brief-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.brief-val{font-size:13px;line-height:1.4;}
+.color-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.color-chip{width:22px;height:22px;border-radius:50%;border:2px solid rgba(0,0,0,.2);}
+
+/* add client form */
+.add-form{padding:16px;}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.flbl{font-size:12px;font-weight:500;}
+.fhint{font-size:11px;color:var(--muted);line-height:1.4;}
+.inp{width:100%;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:9px;padding:9px 12px;color:var(--txt);font-family:inherit;font-size:13px;outline:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--accent);}
+.inp::placeholder{color:var(--muted2);}
+textarea.inp{resize:vertical;min-height:72px;line-height:1.5;}
+.color-picker{display:flex;gap:8px;flex-wrap:wrap;}
+.cp-opt{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s;}
+.cp-opt.sel{border-color:#fff;}
+
+/* bottom nav */
+.mob-bnav{height:60px;background:var(--surf);border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-around;padding:0 8px;}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 12px;border-radius:10px;color:var(--muted);font-size:10px;transition:all .15s;}
+.bnav-item:hover{color:var(--txt);}
+.bnav-item.on{color:var(--accent2);}
+.bnav-icon{font-size:20px;}
+
+/* ══ DESKTOP ══ */
+.desk-wrap{max-width:1200px;margin:24px auto 48px;padding:0 24px;}
+.desk-shell{background:var(--surf);border-radius:16px;border:1px solid var(--bdr2);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.desk-hdr{height:52px;background:var(--surf);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 16px;gap:12px;}
+.d-logo{font-size:15px;font-weight:600;color:var(--accent2);letter-spacing:-.3px;}
+.d-div{width:1px;height:18px;background:var(--bdr2);}
+.d-bc{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);}
+.d-bc span{color:var(--txt);}
+.d-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.d-ic{width:32px;height:32px;background:var(--surf2);border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;}
+.d-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ec4899);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
+.desk-body{display:flex;min-height:700px;}
+.d-nav{width:52px;background:var(--surf);border-right:1px solid var(--bdr);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;flex-shrink:0;}
+.d-ni{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:17px;transition:background .15s,color .15s;}
+.d-ni:hover{background:var(--surf2);color:var(--txt);}
+.d-ni.on{background:rgba(124,106,247,.15);color:var(--accent2);}
+.d-nbot{margin-top:auto;}
+.desk-main{flex:1;display:grid;grid-template-columns:300px 1fr;overflow:hidden;}
+
+/* CLIENT LIST PANEL */
+.list-panel{border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;}
+.lp-hdr{padding:16px;border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:10px;flex-shrink:0;}
+.lp-top{display:flex;align-items:center;gap:8px;}
+.lp-ttl{font-size:15px;font-weight:600;letter-spacing:-.3px;flex:1;}
+.lp-body{flex:1;overflow-y:auto;}
+.lp-body::-webkit-scrollbar{width:3px;}.lp-body::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:3px;}
+.d-client-row{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .15s;}
+.d-client-row:hover{background:var(--surf2);}
+.d-client-row.sel{background:var(--surf3);border-left:2px solid var(--accent);}
+.d-client-row:last-child{border-bottom:none;}
+.d-cr-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;}
+.d-cr-name{font-size:13px;font-weight:600;}
+.d-cr-handle{font-size:11px;color:var(--muted);}
+.d-cr-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+
+/* DETAIL PANEL */
+.detail-panel{display:flex;flex-direction:column;overflow:hidden;}
+.dp-hdr{padding:20px 24px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.dp-av{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;}
+.dp-name{font-size:18px;font-weight:600;letter-spacing:-.4px;}
+.dp-handle{font-size:12px;color:var(--muted);}
+.dp-actions{margin-left:auto;display:flex;gap:8px;}
+.dp-body{flex:1;overflow-y:auto;padding:24px;}
+.dp-body::-webkit-scrollbar{width:4px;}.dp-body::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:3px;}
+
+/* stats row */
+.stats-row{display:flex;gap:10px;margin-bottom:24px;}
+.stat-card{flex:1;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:14px;}
+.stat-n{font-size:24px;font-weight:600;letter-spacing:-1px;line-height:1;}
+.stat-l{font-size:11px;color:var(--muted);margin-top:3px;}
+.stat-card.total .stat-n{color:var(--accent2);}
+.stat-card.apv .stat-n{color:var(--green);}
+.stat-card.pend .stat-n{color:var(--orange);}
+.stat-card.pub .stat-n{color:var(--blue);}
+
+/* two col layout */
+.dp-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.sec-ttl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--bdr);margin-bottom:12px;}
+
+/* post table */
+.post-table{display:flex;flex-direction:column;gap:6px;}
+.pt-row{display:flex;align-items:center;gap:10px;padding:9px 10px;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;cursor:pointer;transition:all .15s;}
+.pt-row:hover{border-color:var(--bdr2);background:var(--surf3);}
+.pt-icon{width:32px;height:32px;border-radius:6px;background:var(--surf3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.pt-info{flex:1;min-width:0;}
+.pt-ttl{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pt-sub{font-size:10px;color:var(--muted);}
+
+/* brief */
+.brief-item-d{background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:11px 13px;margin-bottom:8px;}
+.bi-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.bi-val{font-size:13px;line-height:1.4;}
+
+/* quota bar */
+.quota-bar-wrap{margin-bottom:6px;}
+.quota-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;}
+.quota-bar{height:6px;background:var(--surf3);border-radius:3px;overflow:hidden;}
+.quota-fill{height:100%;border-radius:3px;background:var(--accent);}
+
+/* empty state */
+.empty-det{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:80px 32px;text-align:center;color:var(--muted);}
+.empty-icon{font-size:40px;opacity:.25;}
+.empty-txt{font-size:14px;line-height:1.5;}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;}
+.modal-ov.on{opacity:1;pointer-events:all;}
+.modal-box{background:var(--surf);border:1px solid var(--bdr2);border-radius:16px;width:480px;max-width:92vw;overflow:hidden;transform:scale(.95) translateY(8px);transition:transform .25s cubic-bezier(.4,0,.2,1);}
+.modal-ov.on .modal-box{transform:scale(1) translateY(0);}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--bdr);}
+.modal-ttl{font-size:15px;font-weight:600;letter-spacing:-.3px;}
+.modal-cls{width:28px;height:28px;border-radius:7px;background:var(--surf2);border:1px solid var(--bdr);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;}
+.modal-cls:hover{color:var(--txt);}
+.modal-body{padding:20px;max-height:60vh;overflow-y:auto;}
+.modal-footer{padding:0 20px 20px;display:flex;gap:8px;justify-content:flex-end;}
+
+/* BUTTONS */
+.btn{padding:9px 16px;border-radius:9px;border:none;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;justify-content:center;transition:all .15s;}
+.btn-ghost{background:var(--surf2);border:1px solid var(--bdr2);color:var(--txt);}
+.btn-ghost:hover{background:var(--surf3);}
+.btn-pri{background:var(--accent);color:#fff;}
+.btn-pri:hover{opacity:.85;}
+.btn-full{width:100%;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surf);border:1px solid var(--bdr2);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px;opacity:0;transition:all .28s;z-index:300;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:var(--gbdr);color:var(--green);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeUp .2s ease;}
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <button class="sw-btn on" id="sw-mob">📱 Mobile</button>
+  <button class="sw-btn" id="sw-dsk">🖥️ Desktop</button>
+</div>
+
+<!-- ══ MOBILE ══ -->
+<div class="view on" id="view-mob">
+  <div class="mob-shell">
+    <div class="mob-sb"><span class="sbt">19:42</span><span>●●● 5G 🔋</span></div>
+
+    <!-- SCREEN: lista -->
+    <div class="screen on" id="mob-screen-list">
+      <div class="mob-hdr">
+        <span class="mob-ttl">Clientes</span>
+        <div class="mob-icon-btn pri" id="mob-add-btn">＋</div>
+      </div>
+      <div class="mob-scroll">
+        <div class="search-wrap">
+          <div class="search-wrap-inner">
+            <span class="search-icon">🔍</span>
+            <input class="search-inp" placeholder="Buscar cliente...">
+          </div>
+        </div>
+        <div class="client-list" id="mob-client-list"></div>
+      </div>
+      <div class="mob-bnav">
+        <div class="bnav-item"><div class="bnav-icon">🏠</div>Home</div>
+        <div class="bnav-item"><div class="bnav-icon">📅</div>Agenda</div>
+        <div class="bnav-item on"><div class="bnav-icon">👥</div>Clientes</div>
+        <div class="bnav-item"><div class="bnav-icon">💬</div>Feedbacks</div>
+      </div>
+    </div>
+
+    <!-- SCREEN: detalhe cliente -->
+    <div class="screen" id="mob-screen-detail">
+      <div class="mob-hdr">
+        <div class="mob-back" id="mob-det-back">←</div>
+        <span class="mob-ttl" id="mob-det-ttl">Cliente</span>
+        <div class="mob-icon-btn" id="mob-det-edit">✏️</div>
+      </div>
+      <div class="mob-scroll" id="mob-det-body"></div>
+    </div>
+
+    <!-- SCREEN: adicionar cliente -->
+    <div class="screen" id="mob-screen-add">
+      <div class="mob-hdr">
+        <div class="mob-back" id="mob-add-back">←</div>
+        <span class="mob-ttl">Novo cliente</span>
+      </div>
+      <div class="mob-scroll">
+        <div class="add-form">
+          <div class="field">
+            <label class="flbl">Nome do cliente *</label>
+            <input class="inp" placeholder="Ex: Loja Aurora">
+          </div>
+          <div class="field">
+            <label class="flbl">Handle do Instagram *</label>
+            <input class="inp" placeholder="@handle">
+          </div>
+          <div class="field">
+            <label class="flbl">Posts mensais contratados</label>
+            <input class="inp" type="number" placeholder="Ex: 20">
+          </div>
+          <div class="field">
+            <label class="flbl">Cor de identificação</label>
+            <div class="color-picker" id="mob-color-picker"></div>
+          </div>
+          <div class="field">
+            <label class="flbl">Tom de voz</label>
+            <textarea class="inp" placeholder="Ex: Descontraído, próximo, usa emojis..."></textarea>
+          </div>
+          <div class="field">
+            <label class="flbl">Hashtags fixas</label>
+            <input class="inp" placeholder="#moda #verao #lojaaurora">
+          </div>
+          <div class="field">
+            <label class="flbl">Restrições / observações</label>
+            <textarea class="inp" placeholder="Ex: Nunca postar imagens com concorrentes..."></textarea>
+          </div>
+          <button class="btn btn-pri btn-full" id="mob-save-client">Salvar cliente</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ DESKTOP ══ -->
+<div class="view" id="view-dsk">
+  <div class="desk-wrap">
+    <div class="desk-shell">
+      <div class="desk-hdr">
+        <span class="d-logo">postflow</span>
+        <div class="d-div"></div>
+        <div class="d-bc"><span>Clientes</span></div>
+        <div class="d-right">
+          <div class="d-ic">🔔</div>
+          <div class="d-av">A</div>
+        </div>
+      </div>
+      <div class="desk-body">
+        <nav class="d-nav">
+          <div class="d-ni">🏠</div>
+          <div class="d-ni">📅</div>
+          <div class="d-ni on">👥</div>
+          <div class="d-ni">💬</div>
+          <div class="d-nbot"><div class="d-ni">⚙️</div></div>
+        </nav>
+        <div class="desk-main">
+
+          <!-- lista -->
+          <div class="list-panel">
+            <div class="lp-hdr">
+              <div class="lp-top">
+                <span class="lp-ttl">Clientes</span>
+                <button class="btn btn-pri btn-sm" id="desk-add-btn">＋ Novo</button>
+              </div>
+              <div class="search-wrap-inner">
+                <span class="search-icon">🔍</span>
+                <input class="search-inp" placeholder="Buscar...">
+              </div>
+            </div>
+            <div class="lp-body" id="desk-client-list"></div>
+          </div>
+
+          <!-- detalhe -->
+          <div class="detail-panel">
+            <div id="desk-det-empty" class="empty-det">
+              <div class="empty-icon">👥</div>
+              <div class="empty-txt">Selecione um cliente<br>para ver os detalhes.</div>
+            </div>
+            <div id="desk-det-content" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+              <div class="dp-hdr">
+                <div class="dp-av" id="dp-av">A</div>
+                <div>
+                  <div class="dp-name" id="dp-name">Cliente</div>
+                  <div class="dp-handle" id="dp-handle">@handle</div>
+                </div>
+                <div class="dp-actions">
+                  <button class="btn btn-ghost btn-sm">🔗 Gerar link</button>
+                  <button class="btn btn-ghost btn-sm">📊 Grid</button>
+                  <button class="btn btn-pri btn-sm" id="desk-edit-btn">✏️ Editar</button>
+                </div>
+              </div>
+              <div class="dp-body" id="dp-body"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL cadastro desktop -->
+  <div class="modal-ov" id="desk-add-modal">
+    <div class="modal-box fade-in">
+      <div class="modal-hdr">
+        <div class="modal-ttl">Novo cliente</div>
+        <div class="modal-cls" id="desk-modal-cls">×</div>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label class="flbl">Nome do cliente *</label><input class="inp" placeholder="Ex: Loja Aurora"></div>
+        <div class="field"><label class="flbl">Handle do Instagram *</label><input class="inp" placeholder="@handle"></div>
+        <div class="field"><label class="flbl">Posts mensais contratados</label><input class="inp" type="number" placeholder="20"></div>
+        <div class="field">
+          <label class="flbl">Cor de identificação</label>
+          <div class="color-picker" id="desk-color-picker"></div>
+        </div>
+        <div class="field"><label class="flbl">Tom de voz</label><textarea class="inp" rows="2" placeholder="Descontraído, usa emojis..."></textarea></div>
+        <div class="field"><label class="flbl">Hashtags fixas</label><input class="inp" placeholder="#moda #verao"></div>
+        <div class="field"><label class="flbl">Restrições / observações</label><textarea class="inp" rows="2" placeholder="Nunca postar..."></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="desk-modal-cancel">Cancelar</button>
+        <button class="btn btn-pri" id="desk-modal-save">Salvar cliente</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="desk-toast"></div>
+</div>
+
+<script>
+(function(){
+
+var COLORS = ['#f472b6','#34d399','#fb923c','#60a5fa','#a78bfa','#fbbf24','#f87171','#2dd4bf'];
+
+var CLIENTS = [
+  {id:1,name:'Loja Aurora',   handle:'@lojaaurora',  color:'#f472b6',quota:20,posts:12,apv:5,pend:4,pub:3,
+   tone:'Descontraído, próximo, usa emojis. Evitar gírias muito informais.',
+   hashtags:'#moda #verao #lojaaurora #tendencias',
+   restrict:'Nunca usar imagens com concorrentes. Evitar fundo branco.',
+   dates:[{lbl:'Aniversário da loja',date:'15/04'},{lbl:'Semana de moda',date:'03/06'}]},
+  {id:2,name:'Barbearia Rex', handle:'@barbeariarex', color:'#34d399',quota:15,posts:9,apv:7,pend:2,pub:0,
+   tone:'Masculino, direto, confiante. Emojis moderados.',
+   hashtags:'#barbearia #barba #corte #estilo',
+   restrict:'Sem filtros excessivos nas fotos. Sempre mostrar o produto final.',
+   dates:[{lbl:'Dia do barbeiro',date:'25/10'}]},
+  {id:3,name:'Studio Fit',    handle:'@studiofit',   color:'#fb923c',quota:25,posts:18,apv:12,pend:6,pub:0,
+   tone:'Motivacional, energético, usa emojis de exercício.',
+   hashtags:'#fitness #treino #saude #academia',
+   restrict:'Não mencionar produtos concorrentes. Sempre citar o prof. responsável.',
+   dates:[{lbl:'Semana do cliente',date:'01/09'},{lbl:'Desafio 30 dias',date:'01/01'}]},
+  {id:4,name:'Café Nômade',   handle:'@cafenomade',  color:'#60a5fa',quota:12,posts:7,apv:4,pend:3,pub:0,
+   tone:'Aconchegante, artístico, poético às vezes. Sem emojis excessivos.',
+   hashtags:'#cafe #cafeteria #coffeelovers #specialty',
+   restrict:'Fotos sempre com boa iluminação natural. Sem uso de flash.',
+   dates:[{lbl:'Aniversário do café',date:'22/07'},{lbl:'Semana do café',date:'14/04'}]},
+];
+
+var selectedClient = null;
+var selectedColorMob = COLORS[0];
+var selectedColorDesk = COLORS[0];
+
+function showToast(id,msg,type){
+  var t=document.getElementById(id);
+  t.textContent=msg; t.className='toast '+type+' on';
+  setTimeout(function(){t.classList.remove('on');},3000);
+}
+
+function stBadge(st){
+  var m={aprovado:'aprovado',aguardando:'aguardando',alteracao:'alteracao',rascunho:'rascunho',publicado:'publicado'};
+  var l={aprovado:'Aprovado',aguardando:'Aguardando',alteracao:'Em alteração',rascunho:'Rascunho',publicado:'Publicado'};
+  return '<span class="sbadge '+m[st]+'">'+l[st]+'</span>';
+}
+
+// SWITCHER
+document.getElementById('sw-mob').addEventListener('click',function(){
+  document.getElementById('view-mob').classList.add('on');
+  document.getElementById('view-dsk').classList.remove('on');
+  document.getElementById('sw-mob').classList.add('on');
+  document.getElementById('sw-dsk').classList.remove('on');
+});
+document.getElementById('sw-dsk').addEventListener('click',function(){
+  document.getElementById('view-dsk').classList.add('on');
+  document.getElementById('view-mob').classList.remove('on');
+  document.getElementById('sw-dsk').classList.add('on');
+  document.getElementById('sw-mob').classList.remove('on');
+});
+
+// ── COLOR PICKERS ──
+function renderColorPicker(containerId, selRef, onPick){
+  var el=document.getElementById(containerId);
+  el.innerHTML=COLORS.map(function(c){
+    return '<div class="cp-opt'+(c===selRef?' sel':'')+'" data-c="'+c+'" style="background:'+c+'"></div>';
+  }).join('');
+  el.querySelectorAll('.cp-opt').forEach(function(opt){
+    opt.addEventListener('click',function(){
+      el.querySelectorAll('.cp-opt').forEach(function(x){x.classList.remove('sel');});
+      opt.classList.add('sel');
+      onPick(opt.dataset.c);
+    });
+  });
+}
+
+// ── MOBILE ──
+function mobShowScreen(id){
+  document.querySelectorAll('#view-mob .screen').forEach(function(s){s.classList.remove('on');});
+  document.getElementById(id).classList.add('on');
+}
+
+function renderMobList(){
+  var el=document.getElementById('mob-client-list');
+  el.innerHTML=CLIENTS.map(function(c){
+    var badgeHtml=c.pend>0
+      ? '<span class="cr-badge pend">'+c.pend+' pendentes</span>'
+      : '<span class="cr-badge ok">Em dia</span>';
+    return '<div class="client-row" data-cid="'+c.id+'">'
+      +'<div class="cr-av" style="background:'+c.color+'">'+c.name[0]+'</div>'
+      +'<div class="cr-info"><div class="cr-name">'+c.name+'</div><div class="cr-handle">'+c.handle+'</div></div>'
+      +'<div class="cr-right"><div class="cr-posts">'+c.posts+'/'+c.quota+' posts</div>'+badgeHtml+'</div>'
+      +'</div>';
+  }).join('');
+  el.querySelectorAll('.client-row').forEach(function(row){
+    row.addEventListener('click',function(){
+      var cl=CLIENTS.find(function(x){return x.id===parseInt(row.dataset.cid);});
+      openMobDetail(cl);
+    });
+  });
+}
+
+function openMobDetail(cl){
+  document.getElementById('mob-det-ttl').textContent=cl.name;
+  var body=document.getElementById('mob-det-body');
+  body.innerHTML='<div class="det-hero">'
+    +'<div class="det-hero-top">'
+    +'<div class="det-av" style="background:'+cl.color+'">'+cl.name[0]+'</div>'
+    +'<div><div class="det-name">'+cl.name+'</div><div class="det-handle">'+cl.handle+'</div></div>'
+    +'</div>'
+    +'<div class="det-stats">'
+    +'<div class="det-stat"><div class="det-stat-n" style="color:var(--accent2)">'+cl.posts+'</div><div class="det-stat-l">Posts</div></div>'
+    +'<div class="det-stat"><div class="det-stat-n" style="color:var(--green)">'+cl.apv+'</div><div class="det-stat-l">Aprovados</div></div>'
+    +'<div class="det-stat"><div class="det-stat-n" style="color:var(--orange)">'+cl.pend+'</div><div class="det-stat-l">Pendentes</div></div>'
+    +'</div>'
+    +'</div>'
+
+    // quota bar
+    +'<div class="det-section">'
+    +'<div class="det-sec-ttl">Progresso mensal</div>'
+    +'<div class="quota-bar-wrap">'
+    +'<div class="quota-label"><span>'+cl.posts+' de '+cl.quota+' posts</span><span style="color:var(--muted)">'+Math.round(cl.posts/cl.quota*100)+'%</span></div>'
+    +'<div class="quota-bar"><div class="quota-fill" style="width:'+Math.round(cl.posts/cl.quota*100)+'%;background:'+cl.color+'"></div></div>'
+    +'</div></div>'
+
+    // brief
+    +'<div class="det-section">'
+    +'<div class="det-sec-ttl">Briefing</div>'
+    +'<div class="brief-grid">'
+    +'<div class="brief-item"><div class="brief-lbl">Tom de voz</div><div class="brief-val">'+cl.tone+'</div></div>'
+    +'<div class="brief-item"><div class="brief-lbl">Hashtags fixas</div><div class="brief-val" style="font-family:\'DM Mono\',monospace;font-size:11px;">'+cl.hashtags+'</div></div>'
+    +'<div class="brief-item"><div class="brief-lbl">Restrições</div><div class="brief-val">'+cl.restrict+'</div></div>'
+    +'</div></div>'
+
+    // datas
+    +'<div class="det-section">'
+    +'<div class="det-sec-ttl">Datas importantes</div>'
+    +cl.dates.map(function(d){
+      return '<div class="det-post-row"><div class="det-post-icon">📅</div><div class="det-post-info"><div class="det-post-ttl">'+d.lbl+'</div></div><span style="font-size:11px;color:var(--muted);font-family:\'DM Mono\',monospace;">'+d.date+'</span></div>';
+    }).join('')
+    +'</div>'
+
+    // ações
+    +'<div class="det-section">'
+    +'<div style="display:flex;flex-direction:column;gap:8px;">'
+    +'<button class="btn btn-pri btn-full">📊 Ver grid do Instagram</button>'
+    +'<button class="btn btn-ghost btn-full">🔗 Gerar link de aprovação</button>'
+    +'</div></div>';
+
+  mobShowScreen('mob-screen-detail');
+}
+
+document.getElementById('mob-det-back').addEventListener('click',function(){mobShowScreen('mob-screen-list');});
+document.getElementById('mob-add-btn').addEventListener('click',function(){
+  renderColorPicker('mob-color-picker',selectedColorMob,function(c){selectedColorMob=c;});
+  mobShowScreen('mob-screen-add');
+});
+document.getElementById('mob-add-back').addEventListener('click',function(){mobShowScreen('mob-screen-list');});
+document.getElementById('mob-save-client').addEventListener('click',function(){
+  mobShowScreen('mob-screen-list');
+  showToast('desk-toast','✓ Cliente salvo com sucesso!','ok');
+});
+
+// ── DESKTOP ──
+function renderDeskList(){
+  var el=document.getElementById('desk-client-list');
+  el.innerHTML=CLIENTS.map(function(c){
+    var isSel=selectedClient&&selectedClient.id===c.id;
+    return '<div class="d-client-row'+(isSel?' sel':'')+'" data-cid="'+c.id+'">'
+      +'<div class="d-cr-av" style="background:'+c.color+'">'+c.name[0]+'</div>'
+      +'<div><div class="d-cr-name">'+c.name+'</div><div class="d-cr-handle">'+c.handle+'</div></div>'
+      +'<div class="d-cr-right">'
+      +(c.pend>0?'<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:var(--obg);color:var(--orange);">'+c.pend+' pend.</span>':'<span style="font-size:10px;color:var(--green);">✓</span>')
+      +'</div>'
+      +'</div>';
+  }).join('');
+  el.querySelectorAll('.d-client-row').forEach(function(row){
+    row.addEventListener('click',function(){
+      var cl=CLIENTS.find(function(x){return x.id===parseInt(row.dataset.cid);});
+      selectedClient=cl;
+      renderDeskList();
+      renderDeskDetail(cl);
+    });
+  });
+}
+
+function renderDeskDetail(cl){
+  document.getElementById('desk-det-empty').style.display='none';
+  var cont=document.getElementById('desk-det-content');
+  cont.style.display='flex';
+  document.getElementById('dp-av').textContent=cl.name[0];
+  document.getElementById('dp-av').style.background=cl.color;
+  document.getElementById('dp-name').textContent=cl.name;
+  document.getElementById('dp-handle').textContent=cl.handle;
+
+  document.getElementById('dp-body').innerHTML=
+    '<div class="stats-row">'
+    +'<div class="stat-card total"><div class="stat-n">'+cl.posts+'</div><div class="stat-l">Criados</div></div>'
+    +'<div class="stat-card apv"><div class="stat-n">'+cl.apv+'</div><div class="stat-l">Aprovados</div></div>'
+    +'<div class="stat-card pend"><div class="stat-n">'+cl.pend+'</div><div class="stat-l">Pendentes</div></div>'
+    +'<div class="stat-card pub"><div class="stat-n">'+cl.pub+'</div><div class="stat-l">Publicados</div></div>'
+    +'</div>'
+
+    +'<div class="quota-bar-wrap" style="margin-bottom:24px;">'
+    +'<div class="quota-label"><span style="font-weight:500;">'+cl.posts+' de '+cl.quota+' posts contratados</span><span style="color:var(--muted);">'+Math.round(cl.posts/cl.quota*100)+'%</span></div>'
+    +'<div class="quota-bar"><div class="quota-fill" style="width:'+Math.round(cl.posts/cl.quota*100)+'%;background:'+cl.color+'"></div></div>'
+    +'</div>'
+
+    +'<div class="dp-grid">'
+    // col 1
+    +'<div>'
+    +'<div class="sec-ttl">Briefing</div>'
+    +'<div class="brief-item-d"><div class="bi-lbl">Tom de voz</div><div class="bi-val">'+cl.tone+'</div></div>'
+    +'<div class="brief-item-d"><div class="bi-lbl">Hashtags fixas</div><div class="bi-val" style="font-family:\'DM Mono\',monospace;font-size:12px;">'+cl.hashtags+'</div></div>'
+    +'<div class="brief-item-d"><div class="bi-lbl">Restrições</div><div class="bi-val">'+cl.restrict+'</div></div>'
+    +'<div style="margin-top:12px;"><div class="sec-ttl">Datas importantes</div>'
+    +cl.dates.map(function(d){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr);">'
+        +'<span>📅</span><span style="flex:1;font-size:13px;">'+d.lbl+'</span>'
+        +'<span style="font-size:11px;color:var(--muted);font-family:\'DM Mono\',monospace;">'+d.date+'</span></div>';
+    }).join('')+'</div>'
+    +'</div>'
+    // col 2
+    +'<div>'
+    +'<div class="sec-ttl">Posts recentes</div>'
+    +'<div class="post-table">'
+    +[{icon:'🎬',ttl:'Reels verão',sub:'25/03 · 18:00',st:'aguardando'},
+      {icon:'🖼️',ttl:'Carrossel looks',sub:'22/03 · 10:00',st:'aprovado'},
+      {icon:'📷',ttl:'Foto produto',sub:'20/03 · 09:00',st:'publicado'},
+      {icon:'⭕',ttl:'Stories promo',sub:'18/03 · 16:00',st:'publicado'},
+    ].map(function(p){
+      return '<div class="pt-row">'
+        +'<div class="pt-icon">'+p.icon+'</div>'
+        +'<div class="pt-info"><div class="pt-ttl">'+p.ttl+'</div><div class="pt-sub">'+p.sub+'</div></div>'
+        +stBadge(p.st)+'</div>';
+    }).join('')
+    +'</div>'
+    +'</div>'
+    +'</div>';
+}
+
+// modal desktop
+document.getElementById('desk-add-btn').addEventListener('click',function(){
+  renderColorPicker('desk-color-picker',selectedColorDesk,function(c){selectedColorDesk=c;});
+  document.getElementById('desk-add-modal').classList.add('on');
+});
+document.getElementById('desk-modal-cls').addEventListener('click',function(){document.getElementById('desk-add-modal').classList.remove('on');});
+document.getElementById('desk-modal-cancel').addEventListener('click',function(){document.getElementById('desk-add-modal').classList.remove('on');});
+document.getElementById('desk-add-modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
+document.getElementById('desk-modal-save').addEventListener('click',function(){
+  document.getElementById('desk-add-modal').classList.remove('on');
+  showToast('desk-toast','✓ Cliente salvo com sucesso!','ok');
+});
+
+// INIT
+renderColorPicker('mob-color-picker',selectedColorMob,function(c){selectedColorMob=c;});
+renderMobList();
+renderDeskList();
+})();
+</script>
+</body>
+</html>

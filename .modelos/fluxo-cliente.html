@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aprovação de Posts — Loja Aurora</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f8f9fb;--surf:#fff;--surf2:#f1f3f7;--surf3:#e8eaef;
+  --bdr:rgba(0,0,0,0.07);--bdr2:rgba(0,0,0,0.12);--bdr3:rgba(0,0,0,0.2);
+  --txt:#1a1d2e;--muted:#7a7f96;--muted2:#c0c4d4;
+  --accent:#7c6af7;--accent2:#a78bfa;--abg:rgba(124,106,247,0.08);
+  --green:#059669;--gbg:rgba(5,150,105,0.08);--gbdr:rgba(5,150,105,0.25);
+  --red:#dc2626;--rbg:rgba(220,38,38,0.07);--rbdr:rgba(220,38,38,0.2);
+  --orange:#d97706;--obg:rgba(217,119,6,0.08);--obdr:rgba(217,119,6,0.25);
+  --c1:#f472b6;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);font-size:14px;min-height:100vh;}
+
+/* SWITCHER — só para prototipação */
+.switcher{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:var(--surf);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:90;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.sw-note{font-size:11px;color:var(--muted);background:var(--surf2);padding:4px 10px;border-radius:6px;border:1px solid var(--bdr);}
+.sw-btn{padding:6px 18px;border-radius:8px;border:1px solid var(--bdr2);background:transparent;color:var(--muted);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .18s;}
+.sw-btn:hover{background:var(--surf2);color:var(--txt);}
+.sw-btn.on{background:var(--abg);border-color:var(--accent);color:var(--accent);}
+.view{display:none;}.view.on{display:block;}
+
+/* ════════════════════
+   TELA DE PIN
+════════════════════ */
+.pin-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:var(--bg);}
+.pin-logo{font-size:13px;font-weight:600;color:var(--accent);letter-spacing:-.2px;margin-bottom:32px;opacity:.7;}
+.pin-card{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:32px 28px;width:100%;max-width:340px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.06);}
+.pin-av{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;margin:0 auto 14px;}
+.pin-title{font-size:17px;font-weight:600;letter-spacing:-.3px;margin-bottom:4px;}
+.pin-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5;}
+.pin-inputs{display:flex;gap:8px;justify-content:center;margin-bottom:16px;}
+.pin-inp{width:48px;height:52px;border-radius:10px;border:1.5px solid var(--bdr2);background:var(--surf2);font-size:20px;font-weight:600;text-align:center;color:var(--txt);outline:none;transition:border-color .15s;font-family:inherit;}
+.pin-inp:focus{border-color:var(--accent);background:var(--surf);}
+.pin-error{font-size:12px;color:var(--red);margin-bottom:12px;min-height:16px;}
+.pin-btn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.pin-btn:hover{opacity:.88;}
+.pin-hint{font-size:11px;color:var(--muted);margin-top:14px;}
+
+/* ════════════════════
+   MOBILE CLIENTE
+════════════════════ */
+.mob-client-shell{max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);}
+
+/* header */
+.mc-hdr{background:var(--surf);border-bottom:1px solid var(--bdr);padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:40;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.mc-hdr-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;}
+.mc-hdr-info{flex:1;}
+.mc-hdr-name{font-size:14px;font-weight:600;letter-spacing:-.2px;}
+.mc-hdr-sub{font-size:11px;color:var(--muted);}
+.mc-hdr-prog{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
+.mc-prog-txt{font-size:10px;color:var(--muted);}
+.mc-prog-bar{width:60px;height:4px;background:var(--surf3);border-radius:2px;overflow:hidden;}
+.mc-prog-fill{height:100%;background:var(--green);border-radius:2px;transition:width .4s ease;}
+
+/* progress tabs */
+.mc-tabs{display:flex;gap:0;overflow-x:auto;background:var(--surf);border-bottom:1px solid var(--bdr);}
+.mc-tabs::-webkit-scrollbar{height:0;}
+.mc-tab{padding:10px 16px;font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;flex-shrink:0;}
+.mc-tab.on{color:var(--accent);border-bottom-color:var(--accent);}
+.mc-tab.done{color:var(--green);}
+
+/* post card cliente */
+.mc-scroll{padding:16px 14px;display:flex;flex-direction:column;gap:14px;}
+.mc-post-card{background:var(--surf);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.mc-post-num{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;}
+.mc-post-n{font-size:11px;color:var(--muted);}
+.mc-post-status-badge{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:500;}
+.mc-post-status-badge.pendente{background:var(--obg);color:var(--orange);border:1px solid var(--obdr);}
+.mc-post-status-badge.aprovado{background:var(--gbg);color:var(--green);border:1px solid var(--gbdr);}
+.mc-post-status-badge.alteracao{background:var(--rbg);color:var(--red);border:1px solid var(--rbdr);}
+
+/* ig clone compacto */
+.ig-mini{background:#fff;border-top:1px solid var(--bdr);}
+.ig-mini-hdr{display:flex;align-items:center;gap:7px;padding:8px 12px;}
+.ig-mini-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;}
+.ig-mini-un{font-size:11px;font-weight:600;color:#000;flex:1;}
+.ig-mini-media{width:100%;aspect-ratio:1;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;}
+.ig-mini-type{position:absolute;top:7px;right:7px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;}
+.ig-mini-cap{font-size:11px;line-height:1.5;padding:7px 12px;color:#000;}
+.ig-mini-cap strong{font-weight:600;}
+.ig-mini-time{font-size:9px;color:#aaa;padding:0 12px 8px;}
+
+/* ações do post cliente */
+.mc-post-actions{padding:10px 12px 12px;display:flex;gap:8px;}
+.mc-post-actions-stacked{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px;}
+
+/* feedback input */
+.mc-fb-wrap{padding:0 12px 12px;}
+.mc-fb-textarea{width:100%;background:var(--surf2);border:1.5px solid var(--bdr2);border-radius:9px;padding:9px 12px;color:var(--txt);font-family:inherit;font-size:12px;outline:none;resize:none;min-height:72px;line-height:1.5;transition:border-color .15s;}
+.mc-fb-textarea:focus{border-color:var(--accent);}
+.mc-fb-textarea::placeholder{color:var(--muted2);}
+.mc-fb-send{width:100%;margin-top:7px;padding:10px;border-radius:9px;border:none;background:var(--red);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.mc-fb-send:hover{opacity:.85;}
+
+/* summary bar */
+.mc-summary{background:var(--surf);border-top:1px solid var(--bdr);padding:16px 16px 24px;margin-top:4px;}
+.mc-summary-ttl{font-size:13px;font-weight:600;margin-bottom:12px;}
+.mc-summary-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:12px;}
+.mc-summary-row:last-child{border-bottom:none;}
+.mc-all-approve{width:100%;margin-top:14px;padding:14px;border-radius:12px;border:none;background:var(--green);color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.mc-all-approve:hover{opacity:.88;}
+
+/* ════════════════════
+   DESKTOP CLIENTE
+════════════════════ */
+.desk-client-wrap{max-width:1100px;margin:0 auto;padding:24px;}
+.desk-client-hdr{background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.dc-av{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;}
+.dc-info{flex:1;}
+.dc-name{font-size:18px;font-weight:600;letter-spacing:-.4px;}
+.dc-sub{font-size:13px;color:var(--muted);}
+.dc-prog{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.dc-prog-txt{font-size:12px;color:var(--muted);}
+.dc-prog-bar{width:120px;height:6px;background:var(--surf3);border-radius:3px;overflow:hidden;}
+.dc-prog-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s;}
+.desk-client-body{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;}
+
+/* posts grid */
+.dc-posts-grid{display:flex;flex-direction:column;gap:12px;}
+.dc-post-card{background:var(--surf);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);display:grid;grid-template-columns:280px 1fr;}
+.dc-post-left{background:#fff;border-right:1px solid var(--bdr);}
+.dc-post-right{padding:20px;display:flex;flex-direction:column;gap:14px;}
+.dc-post-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.dc-post-n{font-size:11px;color:var(--muted);}
+
+/* ig clone desktop */
+.ig-desk-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;}
+.ig-desk-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;}
+.ig-desk-un{font-size:11px;font-weight:600;color:#000;flex:1;}
+.ig-desk-media{width:100%;aspect-ratio:1;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:52px;position:relative;}
+.ig-desk-type{position:absolute;top:7px;right:7px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;}
+.ig-desk-cap{font-size:11px;line-height:1.5;padding:7px 12px;color:#000;}
+.ig-desk-cap strong{font-weight:600;}
+.ig-desk-time{font-size:9px;color:#aaa;padding:0 12px 9px;}
+
+/* actions desktop */
+.dc-actions-title{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:8px;}
+.dc-actions-btns{display:flex;flex-direction:column;gap:8px;}
+.dc-fb-area{display:none;flex-direction:column;gap:7px;}
+.dc-fb-area.on{display:flex;}
+.dc-fb-ta{width:100%;background:var(--surf2);border:1.5px solid var(--bdr2);border-radius:9px;padding:9px 12px;color:var(--txt);font-family:inherit;font-size:12px;outline:none;resize:none;min-height:72px;line-height:1.5;transition:border-color .15s;}
+.dc-fb-ta:focus{border-color:var(--accent);}
+.dc-fb-ta::placeholder{color:var(--muted2);}
+
+/* sidebar resumo desktop */
+.dc-sidebar{display:flex;flex-direction:column;gap:12px;position:sticky;top:80px;}
+.dc-side-card{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.dc-side-ttl{font-size:12px;font-weight:600;margin-bottom:12px;}
+.dc-side-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px;}
+.dc-side-row:last-child{border-bottom:none;}
+.dc-all-btn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;margin-top:4px;}
+.dc-all-btn:hover{opacity:.88;}
+
+/* SHARED */
+.btn{padding:9px 16px;border-radius:9px;border:none;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;justify-content:center;transition:all .15s;}
+.btn-approve{background:var(--green);color:#fff;}
+.btn-approve:hover{opacity:.88;}
+.btn-fb{background:var(--surf2);border:1.5px solid var(--rbdr);color:var(--red);}
+.btn-fb:hover{background:var(--rbg);}
+.btn-ghost{background:var(--surf2);border:1px solid var(--bdr2);color:var(--txt);}
+.btn-ghost:hover{background:var(--surf3);}
+.btn-full{width:100%;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+
+.status-pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:500;}
+.status-pill.pendente{background:var(--obg);color:var(--orange);border:1px solid var(--obdr);}
+.status-pill.aprovado{background:var(--gbg);color:var(--green);border:1px solid var(--gbdr);}
+.status-pill.alteracao{background:var(--rbg);color:var(--red);border:1px solid var(--rbdr);}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:#1a1d2e;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px;color:#fff;opacity:0;transition:all .28s;z-index:300;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:rgba(5,150,105,.4);color:#34d399;}
+.toast.fb{border-color:rgba(220,38,38,.3);color:#f87171;}
+
+.powered{text-align:center;padding:20px;font-size:11px;color:var(--muted);}
+.powered span{color:var(--accent);font-weight:600;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeUp .22s ease;}
+
+/* PIN OVERLAY */
+.pin-overlay{position:fixed;inset:0;background:var(--bg);z-index:80;display:flex;align-items:center;justify-content:center;}
+.pin-overlay.hidden{display:none;}
+</style>
+</head>
+<body>
+
+<!-- SWITCHER prototipação -->
+<div class="switcher">
+  <span class="sw-note">🔗 Protótipo: link de aprovação do cliente</span>
+  <button class="sw-btn on" id="sw-mob">📱 Mobile</button>
+  <button class="sw-btn" id="sw-dsk">🖥️ Desktop</button>
+</div>
+
+<!-- ══ MOBILE ══ -->
+<div class="view on" id="view-mob">
+
+  <!-- PIN screen mobile -->
+  <div class="pin-overlay" id="mob-pin-overlay">
+    <div class="pin-screen" style="min-height:auto;padding:0;">
+      <div class="pin-logo">postflow</div>
+      <div class="pin-card fade-in">
+        <div class="pin-av">L</div>
+        <div class="pin-title">Loja Aurora</div>
+        <div class="pin-sub">Digite o PIN de 4 dígitos<br>para acessar os posts.</div>
+        <div class="pin-inputs">
+          <input class="pin-inp" maxlength="1" type="text" inputmode="numeric" id="p1">
+          <input class="pin-inp" maxlength="1" type="text" inputmode="numeric" id="p2">
+          <input class="pin-inp" maxlength="1" type="text" inputmode="numeric" id="p3">
+          <input class="pin-inp" maxlength="1" type="text" inputmode="numeric" id="p4">
+        </div>
+        <div class="pin-error" id="mob-pin-error"></div>
+        <button class="pin-btn" id="mob-pin-btn">Acessar →</button>
+        <div class="pin-hint">PIN enviado pelo seu social media.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO mobile -->
+  <div class="mob-client-shell">
+    <div class="mc-hdr">
+      <div class="mc-hdr-av">L</div>
+      <div class="mc-hdr-info">
+        <div class="mc-hdr-name">Loja Aurora</div>
+        <div class="mc-hdr-sub">Março 2026 · 4 posts para revisar</div>
+      </div>
+      <div class="mc-hdr-prog">
+        <div class="mc-prog-txt" id="mob-prog-txt">1/4 aprovados</div>
+        <div class="mc-prog-bar"><div class="mc-prog-fill" id="mob-prog-fill" style="width:25%"></div></div>
+      </div>
+    </div>
+
+    <div class="mc-tabs" id="mob-tabs"></div>
+
+    <div class="mc-scroll" id="mob-posts-list"></div>
+
+    <div class="mc-summary">
+      <div class="mc-summary-ttl">Resumo de março</div>
+      <div id="mob-summary-rows"></div>
+      <button class="mc-all-approve" id="mob-approve-all">✓ Aprovar todos os posts pendentes</button>
+    </div>
+
+    <div class="powered">Powered by <span>postflow</span></div>
+  </div>
+</div>
+
+<!-- ══ DESKTOP ══ -->
+<div class="view" id="view-dsk">
+
+  <!-- PIN screen desktop -->
+  <div class="pin-overlay" id="desk-pin-overlay">
+    <div class="pin-screen">
+      <div class="pin-logo">postflow</div>
+      <div class="pin-card fade-in">
+        <div class="pin-av">L</div>
+        <div class="pin-title">Loja Aurora</div>
+        <div class="pin-sub">Digite o PIN para acessar<br>os posts de março 2026.</div>
+        <div class="pin-inputs">
+          <input class="pin-inp" maxlength="1" type="text" inputmode="numeric" id="dp1">
+          <input class="pin-inp" maxlength="1" type="text" inputmode="numeric" id="dp2">
+          <input class="pin-inp" maxlength="1" type="text" inputmode="numeric" id="dp3">
+          <input class="pin-inp" maxlength="1" type="text" inputmode="numeric" id="dp4">
+        </div>
+        <div class="pin-error" id="desk-pin-error"></div>
+        <button class="pin-btn" id="desk-pin-btn">Acessar →</button>
+        <div class="pin-hint">PIN enviado pelo seu social media. Use 1234 neste protótipo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO desktop -->
+  <div class="desk-client-wrap">
+    <div class="desk-client-hdr">
+      <div class="dc-av">L</div>
+      <div class="dc-info">
+        <div class="dc-name">Loja Aurora · Posts de março 2026</div>
+        <div class="dc-sub">Revise e aprove os posts antes da data de publicação.</div>
+      </div>
+      <div class="dc-prog">
+        <div class="dc-prog-txt" id="desk-prog-txt">1 de 4 aprovados</div>
+        <div class="dc-prog-bar"><div class="dc-prog-fill" id="desk-prog-fill" style="width:25%"></div></div>
+      </div>
+    </div>
+
+    <div class="desk-client-body">
+      <div class="dc-posts-grid" id="desk-posts-grid"></div>
+      <div class="dc-sidebar">
+        <div class="dc-side-card">
+          <div class="dc-side-ttl">Resumo de março</div>
+          <div id="desk-summary-rows"></div>
+          <button class="dc-all-btn" id="desk-approve-all">✓ Aprovar todos pendentes</button>
+        </div>
+        <div class="dc-side-card">
+          <div class="dc-side-ttl">ℹ️ Como aprovar</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+            Clique em <strong style="color:var(--txt)">Aprovar</strong> para confirmar cada post.<br><br>
+            Se precisar de alteração, clique em <strong style="color:var(--txt)">Solicitar alteração</strong> e descreva o que mudar.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="powered">Powered by <span>postflow</span></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+
+var POSTS = [
+  {id:1, icon:'🎬', type:'Reels',    date:'25/03 · 18:00', cap:'Nova coleção de verão chegou! ✨ Confira os looks incríveis que preparamos para você brilhar nessa temporada. #moda #verao #lojaaurora', st:'aprovado'},
+  {id:2, icon:'🖼️', type:'Carrossel',date:'27/03 · 12:00', cap:'5 looks para usar na praia 🌊 Qual é o seu favorito? Salva esse post para inspiração! #beach #summer', st:'pendente'},
+  {id:3, icon:'📷', type:'Foto',     date:'29/03 · 09:00', cap:'Look do dia ✨ Camisa floral + calça branca = perfeição total. Tudo disponível no site! #lookdodia', st:'pendente'},
+  {id:4, icon:'⭕', type:'Stories',  date:'30/03 · 20:00', cap:'Promoção relâmpago! 30% off em toda a coleção verão até meia-noite 🔥 Corre!', st:'pendente'},
+];
+
+var fbOpenId = null;
+
+function showToast(msg,type){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+type+' on';
+  setTimeout(function(){t.classList.remove('on');},3200);
+}
+
+function getApproved(){return POSTS.filter(function(p){return p.st==='aprovado';}).length;}
+function getPending(){return POSTS.filter(function(p){return p.st==='pendente';}).length;}
+function getAlt(){return POSTS.filter(function(p){return p.st==='alteracao';}).length;}
+
+function updateProgress(){
+  var apv=getApproved();
+  var pct=Math.round(apv/POSTS.length*100);
+  var txt=apv+'/'+POSTS.length+' aprovados';
+  var mpt=document.getElementById('mob-prog-txt');
+  var mfill=document.getElementById('mob-prog-fill');
+  var dpt=document.getElementById('desk-prog-txt');
+  var dfill=document.getElementById('desk-prog-fill');
+  if(mpt) mpt.textContent=txt;
+  if(mfill) mfill.style.width=pct+'%';
+  if(dpt) dpt.textContent=apv+' de '+POSTS.length+' aprovados';
+  if(dfill) dfill.style.width=pct+'%';
+}
+
+function statusPill(st){
+  var labels={pendente:'Pendente',aprovado:'✓ Aprovado',alteracao:'✏️ Alteração'};
+  return '<span class="status-pill '+st+'">'+labels[st]+'</span>';
+}
+
+function renderSummary(containerId){
+  var el=document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML=POSTS.map(function(p){
+    return '<div class="'+(containerId.includes('mob')?'mc-summary-row':'dc-side-row')+'">'
+      +'<span>'+p.icon+' '+p.type+' · '+p.date.split(' ')[0]+'</span>'
+      +statusPill(p.st)
+      +'</div>';
+  }).join('');
+}
+
+// ── PIN ──
+function setupPin(overlayId, btnId, errorId, prefix, onSuccess){
+  var ids=[prefix+'1',prefix+'2',prefix+'3',prefix+'4'];
+  ids.forEach(function(id,i){
+    var inp=document.getElementById(id);
+    if(!inp) return;
+    inp.addEventListener('input',function(){
+      if(inp.value.length===1&&i<ids.length-1) document.getElementById(ids[i+1]).focus();
+    });
+    inp.addEventListener('keydown',function(e){
+      if(e.key==='Backspace'&&inp.value===''&&i>0) document.getElementById(ids[i-1]).focus();
+    });
+  });
+  document.getElementById(btnId).addEventListener('click',function(){
+    var pin=ids.map(function(id){return document.getElementById(id).value;}).join('');
+    if(pin==='1234'){
+      document.getElementById(overlayId).classList.add('hidden');
+      onSuccess();
+    } else {
+      document.getElementById(errorId).textContent='PIN incorreto. Tente novamente.';
+      ids.forEach(function(id){document.getElementById(id).value='';});
+      document.getElementById(ids[0]).focus();
+    }
+  });
+}
+
+setupPin('mob-pin-overlay','mob-pin-btn','mob-pin-error','p',function(){renderMob();});
+setupPin('desk-pin-overlay','desk-pin-btn','desk-pin-error','dp',function(){renderDesk();});
+
+// ── MOBILE ──
+function renderMob(){
+  // tabs
+  var tabs=document.getElementById('mob-tabs');
+  tabs.innerHTML=POSTS.map(function(p,i){
+    var cls='mc-tab'+(p.st==='aprovado'?' done':'');
+    return '<div class="'+cls+'" data-pi="'+i+'">Post '+(i+1)+(p.st==='aprovado'?' ✓':'')+'</div>';
+  }).join('');
+  tabs.querySelectorAll('.mc-tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      var el=document.getElementById('mob-post-'+tab.dataset.pi);
+      if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
+
+  // posts list
+  var list=document.getElementById('mob-posts-list');
+  list.innerHTML=POSTS.map(function(p,i){
+    var isOpen=fbOpenId===p.id;
+    return '<div class="mc-post-card fade-in" id="mob-post-'+i+'">'
+      +'<div class="mc-post-num"><span class="mc-post-n">Post '+(i+1)+' de '+POSTS.length+'</span>'+statusPill(p.st)+'</div>'
+      +'<div class="ig-mini">'
+      +'<div class="ig-mini-hdr"><div class="ig-mini-av">L</div><span class="ig-mini-un">@lojaaurora</span></div>'
+      +'<div class="ig-mini-media">'+p.icon+'<div class="ig-mini-type">'+p.type+'</div></div>'
+      +'<div class="ig-mini-cap"><strong>@lojaaurora</strong> '+p.cap+'</div>'
+      +'<div class="ig-mini-time">Agendado para '+p.date+'</div>'
+      +'</div>'
+      +(p.st==='pendente'
+        ?'<div class="mc-post-actions"><button class="btn btn-fb btn-full" data-mobfb="'+p.id+'">💬 Solicitar alteração</button><button class="btn btn-approve btn-full" data-mobapv="'+p.id+'">✓ Aprovar</button></div>'
+          +'<div class="mc-fb-wrap" id="mob-fb-'+p.id+'" style="display:'+(isOpen?'block':'none')+';">'
+          +'<textarea class="mc-fb-textarea" placeholder="Descreva o que precisa ser alterado..."></textarea>'
+          +'<button class="mc-fb-send" data-mobfbsend="'+p.id+'">Enviar solicitação</button>'
+          +'</div>'
+        :p.st==='aprovado'
+          ?'<div style="text-align:center;padding:14px;font-size:13px;color:var(--green);font-weight:500;">✓ Post aprovado</div>'
+          :'<div style="text-align:center;padding:14px;font-size:12px;color:var(--red);">✏️ Alteração solicitada — aguardando o criador.</div>'
+      )
+      +'</div>';
+  }).join('');
+
+  list.querySelectorAll('[data-mobapv]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pid=parseInt(btn.dataset.mobapv);
+      var idx=POSTS.findIndex(function(p){return p.id===pid;});
+      if(idx>=0) POSTS[idx].st='aprovado';
+      updateProgress(); renderMob(); renderSummary('mob-summary-rows');
+      showToast('✓ Post aprovado!','ok');
+    });
+  });
+  list.querySelectorAll('[data-mobfb]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pid=parseInt(btn.dataset.mobfb);
+      fbOpenId=fbOpenId===pid?null:pid;
+      renderMob();
+    });
+  });
+  list.querySelectorAll('[data-mobfbsend]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pid=parseInt(btn.dataset.mobfbsend);
+      var ta=document.querySelector('#mob-fb-'+pid+' textarea');
+      if(!ta||!ta.value.trim()){ta.focus();return;}
+      var idx=POSTS.findIndex(function(p){return p.id===pid;});
+      if(idx>=0) POSTS[idx].st='alteracao';
+      fbOpenId=null;
+      updateProgress(); renderMob(); renderSummary('mob-summary-rows');
+      showToast('💬 Alteração enviada!','fb');
+    });
+  });
+
+  updateProgress();
+  renderSummary('mob-summary-rows');
+
+  document.getElementById('mob-approve-all').onclick=function(){
+    POSTS.forEach(function(p){if(p.st==='pendente') p.st='aprovado';});
+    updateProgress(); renderMob(); renderSummary('mob-summary-rows');
+    showToast('✓ Todos os posts aprovados!','ok');
+  };
+}
+
+// ── DESKTOP ──
+function renderDesk(){
+  var grid=document.getElementById('desk-posts-grid');
+  grid.innerHTML=POSTS.map(function(p,i){
+    var isOpen=fbOpenId===p.id;
+    return '<div class="dc-post-card fade-in">'
+      // lado esquerdo — ig
+      +'<div class="dc-post-left">'
+      +'<div class="ig-desk-hdr"><div class="ig-desk-av">L</div><span class="ig-desk-un">@lojaaurora</span></div>'
+      +'<div class="ig-desk-media">'+p.icon+'<div class="ig-desk-type">'+p.type+'</div></div>'
+      +'<div class="ig-desk-cap"><strong>@lojaaurora</strong> '+p.cap+'</div>'
+      +'<div class="ig-desk-time">Agendado para '+p.date+'</div>'
+      +'</div>'
+      // lado direito — ações
+      +'<div class="dc-post-right">'
+      +'<div class="dc-post-meta"><span class="dc-post-n">Post '+(i+1)+' de '+POSTS.length+'</span>'+statusPill(p.st)+'</div>'
+      +(p.st==='pendente'
+        ?'<div class="dc-actions-btns">'
+          +'<button class="btn btn-approve btn-full" data-dapv="'+p.id+'">✓ Aprovar post</button>'
+          +'<button class="btn btn-fb btn-full" data-dfb="'+p.id+'">💬 Solicitar alteração</button>'
+          +'</div>'
+          +'<div class="dc-fb-area'+(isOpen?' on':'')+'" id="desk-fb-'+p.id+'">'
+          +'<textarea class="dc-fb-ta" placeholder="Descreva o que precisa ser alterado com detalhes..."></textarea>'
+          +'<button class="btn btn-ghost btn-sm" data-dfbsend="'+p.id+'">Enviar solicitação →</button>'
+          +'</div>'
+        :p.st==='aprovado'
+          ?'<div style="padding:16px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:10px;text-align:center;color:var(--green);font-weight:600;font-size:14px;">✓ Aprovado</div>'
+          :'<div style="padding:14px;background:var(--rbg);border:1px solid var(--rbdr);border-radius:10px;text-align:center;color:var(--red);font-size:13px;">✏️ Alteração solicitada.<br><span style=\"font-size:11px;opacity:.7;\">Aguardando o criador.</span></div>'
+      )
+      +'</div>'
+      +'</div>';
+  }).join('');
+
+  grid.querySelectorAll('[data-dapv]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pid=parseInt(btn.dataset.dapv);
+      var idx=POSTS.findIndex(function(p){return p.id===pid;});
+      if(idx>=0) POSTS[idx].st='aprovado';
+      updateProgress(); renderDesk(); renderSummary('desk-summary-rows');
+      showToast('✓ Post aprovado!','ok');
+    });
+  });
+  grid.querySelectorAll('[data-dfb]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pid=parseInt(btn.dataset.dfb);
+      fbOpenId=fbOpenId===pid?null:pid;
+      renderDesk();
+    });
+  });
+  grid.querySelectorAll('[data-dfbsend]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pid=parseInt(btn.dataset.dfbsend);
+      var ta=document.querySelector('#desk-fb-'+pid+' textarea');
+      if(!ta||!ta.value.trim()){ta.focus();return;}
+      var idx=POSTS.findIndex(function(p){return p.id===pid;});
+      if(idx>=0) POSTS[idx].st='alteracao';
+      fbOpenId=null;
+      updateProgress(); renderDesk(); renderSummary('desk-summary-rows');
+      showToast('💬 Alteração enviada!','fb');
+    });
+  });
+
+  document.getElementById('desk-approve-all').onclick=function(){
+    POSTS.forEach(function(p){if(p.st==='pendente') p.st='aprovado';});
+    updateProgress(); renderDesk(); renderSummary('desk-summary-rows');
+    showToast('✓ Todos os posts aprovados!','ok');
+  };
+
+  updateProgress();
+  renderSummary('desk-summary-rows');
+}
+
+// SWITCHER
+document.getElementById('sw-mob').addEventListener('click',function(){
+  document.getElementById('view-mob').classList.add('on');
+  document.getElementById('view-dsk').classList.remove('on');
+  document.getElementById('sw-mob').classList.add('on');
+  document.getElementById('sw-dsk').classList.remove('on');
+});
+document.getElementById('sw-dsk').addEventListener('click',function(){
+  document.getElementById('view-dsk').classList.add('on');
+  document.getElementById('view-mob').classList.remove('on');
+  document.getElementById('sw-dsk').classList.add('on');
+  document.getElementById('sw-mob').classList.remove('on');
+});
+
+})();
+</script>
+</body>
+</html>
