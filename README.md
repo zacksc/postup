@@ -2,23 +2,29 @@
 
 Plataforma de gerenciamento de posts para redes sociais. Organize, agende e publique conteúdo com seus clientes.
 
+![CI](https://github.com/zacksc/postup/actions/workflows/ci.yml/badge.svg)
+
 ## Funcionalidades
 
-- **Kanban de Tarefas**: Gerencie posts com drag-and-drop
-- **Cronograma Visual**: Calendário mensal/semanal com agendamento
-- **Grid Instagram**: Prévia do perfil e organização visual
-- **Chat**: Comunicação com clientes sobre posts
-- **Aprovação de Posts**: Fluxo de revisão e aprovação
-- **Upload de Mídia**: Suporte a imagens e vídeos com compressão
+- **Kanban de Tarefas** — Gerencie posts com drag-and-drop
+- **Cronograma Visual** — Calendário mensal/semanal com agendamento
+- **Grid Instagram** — Prévia do perfil e organização visual
+- **Chat** — Comunicação com clientes sobre posts
+- **Aprovação de Posts** — Fluxo de revisão e aprovação
+- **Upload de Mídia** — Suporte a imagens e vídeos com compressão
+- **Landing Page** — Página de vendas integrada
 
 ## Stack
 
-- **Frontend**: React + TypeScript + Vite
-- **UI**: Tailwind CSS + shadcn/ui
-- **Backend**: Supabase (PostgreSQL + Auth + Storage)
-- **Deploy**: Vercel / Cloudflare
+| Camada | Tecnologia |
+|--------|-----------|
+| Frontend | React + TypeScript + Vite |
+| UI | Tailwind CSS + shadcn/ui |
+| Backend | Supabase (PostgreSQL + Auth + Storage) |
+| Deploy | Vercel |
+| Testes | Vitest + Testing Library |
 
-## Setup
+## Setup Local
 
 ### Pré-requisitos
 
@@ -28,18 +34,11 @@ Plataforma de gerenciamento de posts para redes sociais. Organize, agende e publ
 ### Instalação
 
 ```bash
-# Clonar o repositório
-git clone https://github.com/zacksc/postup-open.git
-cd postup-open
-
-# Instalar dependências
+git clone https://github.com/zacksc/postup.git
+cd postup
 npm install
-
-# Configurar variáveis de ambiente
 cp .env.example .env.local
-# Edite .env.local com suas credenciais do Supabase
-
-# Iniciar desenvolvimento
+# Edite .env.local com suas credenciais
 npm run dev
 ```
 
@@ -50,12 +49,11 @@ npm run dev
 | `VITE_SUPABASE_URL` | URL do projeto Supabase | Sim |
 | `VITE_SUPABASE_ANON_KEY` | Chave anônima do Supabase | Sim |
 | `VITE_APP_URL` | URL da aplicação | Não |
-| `VITE_STORAGE_PROVIDER` | Provedor de storage (`supabase` ou `r2`) | Não |
-| `VITE_MAX_MEDIA_SIZE` | Limite de mídia em MB (padrão: 30) | Não |
+| `VITE_STORAGE_PROVIDER` | `supabase` ou `r2` | Não |
 
 ### Banco de Dados
 
-As migrações do Supabase estão em `supabase/migrations/`. Para aplicar:
+As migrações estão em `supabase/migrations/`. Para aplicar:
 
 ```bash
 npx supabase db push
@@ -72,16 +70,23 @@ src/
 │   ├── feedback/   # Cards de feedback
 │   └── post/       # Cards e modais de posts
 ├── pages/          # Páginas da aplicação
-│   ├── Home/       # Dashboard principal
-│   ├── Cronograma/ # Calendário de agendamento
-│   ├── Feedbacks/  # Kanban de tarefas
-│   ├── GridInstagram/ # Grid visual do Instagram
-│   ├── Chat/       # Chat com clientes
-│   └── Landing/    # Página de vendas
 ├── hooks/          # Hooks customizados
 ├── lib/            # Utilitários e configurações
 └── types/          # Definições de tipos
+
+supabase/
+├── functions/      # Edge functions
+└── migrations/     # Migrations do banco
 ```
+
+## Scripts
+
+| Comando | Descrição |
+|---------|-----------|
+| `npm run dev` | Iniciar servidor de desenvolvimento |
+| `npm run build` | Build de produção |
+| `npm run lint` | Verificar erros ESLint |
+| `npm test` | Rodar testes |
 
 ## Licença
 

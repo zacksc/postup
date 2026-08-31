@@ -24,31 +24,26 @@ dist-ssr
 *.sw?
 .env
 
-# Project-specific
+# Arquivos internos (não incluir no repo público)
+.github/
+.modelos/
 .modelosdeinspo/
-.agents/
-# supabase/ é rastreado parcialmente: funções e migrações vão ao git,
-# mas .env, .temp e config local ficam ignorados
+estudos/
+docs/
+docs-site/
+estudos-site/
+ ROADMAP.md
+TUTORIAL-OPENCHAMBER.md
+.wrangler/
+containers/*/node_modules/
+.vercel/
+public/ffmpeg/
+quiz/
+
+# supabase/ é rastreado parcialmente
 supabase/.env*
 supabase/.temp/
 supabase/config.toml
-
-# Sites gerados (regenerar com os geradores de docs/ e estudos/)
-docs-site/
-estudos-site/
-
-# Link local com a Vercel (dados do projeto e env de produção baixado)
-.vercel/
-
-# ffmpeg.wasm core (gerado no postinstall a partir do node_modules)
-public/ffmpeg/
-
-# Quiz isolado dos estudos (HTML estático, não é parte do app Vite)
-quiz/
-
-# Cloudflare Workers / Containers
-.wrangler/
-containers/*/node_modules/
 
 # Imagens soltas na raiz
 *.webp
