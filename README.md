@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/logo.svg" alt="PostUp" width="120" />
+  <img src="public/logo.svg" alt="PostUp" width="420" />
 </p>
 
 <h1 align="center">PostUp</h1>
